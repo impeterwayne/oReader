@@ -58,6 +58,7 @@ dependencies {
 
     // ── Feature modules ──
     implementation(project(":feature:template"))
+    implementation(project(":feature:reader"))
 
     // ── Android Core ──
     implementation("androidx.core:core-ktx:1.16.0")

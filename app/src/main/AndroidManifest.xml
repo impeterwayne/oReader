@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Codebase">
         <activity
-            android:name=".MainActivity"
+            android:name=".LibraryActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -24,6 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".MainActivity" />
     </application>
 
 </manifest>

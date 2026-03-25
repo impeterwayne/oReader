@@ -1,0 +1,42 @@
+[submodule "thirdparty/jbig2dec"]
+	path = thirdparty/jbig2dec
+	url = https://github.com/artifexsoftware/jbig2dec.git
+[submodule "thirdparty/mujs"]
+	path = thirdparty/mujs
+	url = https://github.com/artifexsoftware/mujs.git
+[submodule "thirdparty/freetype"]
+	path = thirdparty/freetype
+	url = https://github.com/artifexsoftware/thirdparty-freetype2.git
+[submodule "thirdparty/gumbo-parser"]
+	path = thirdparty/gumbo-parser
+	url = https://github.com/artifexsoftware/thirdparty-gumbo-parser.git
+[submodule "thirdparty/harfbuzz"]
+	path = thirdparty/harfbuzz
+	url = https://github.com/artifexsoftware/thirdparty-harfbuzz.git
+[submodule "thirdparty/jpeg"]
+	path = thirdparty/libjpeg
+	url = https://github.com/artifexsoftware/thirdparty-libjpeg.git
+[submodule "thirdparty/lcms2"]
+	path = thirdparty/lcms2
+	url = https://github.com/artifexsoftware/thirdparty-lcms2.git
+[submodule "thirdparty/openjpeg"]
+	path = thirdparty/openjpeg
+	url = https://github.com/artifexsoftware/thirdparty-openjpeg.git
+[submodule "thirdparty/zlib"]
+	path = thirdparty/zlib
+	url = https://github.com/artifexsoftware/thirdparty-zlib.git
+[submodule "thirdparty/curl"]
+	path = thirdparty/curl
+	url = https://github.com/artifexsoftware/thirdparty-curl.git
+[submodule "thirdparty/freeglut"]
+	path = thirdparty/freeglut
+	url = https://github.com/artifexsoftware/thirdparty-freeglut.git
+[submodule "thirdparty/tesseract"]
+	path = thirdparty/tesseract
+	url = https://github.com/artifexsoftware/thirdparty-tesseract.git
+[submodule "thirdparty/leptonica"]
+	path = thirdparty/leptonica
+	url = https://github.com/artifexsoftware/thirdparty-leptonica.git
+[submodule "thirdparty/extract"]
+	path = thirdparty/extract
+	url = https://github.com/artifexsoftware/extract.git

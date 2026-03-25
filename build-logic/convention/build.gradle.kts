@@ -48,5 +48,9 @@ gradlePlugin {
             id = "codebase.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"
         }
+        register("androidJni") {
+            id = "codebase.android.jni"
+            implementationClass = "AndroidJniConventionPlugin"
+        }
     }
 }

@@ -36,6 +36,8 @@ include(":core:domain")
 include(":core:data")
 include(":core:ui")
 include(":core:common")
+include(":core:document-reader")
 
 // Feature modules
 include(":feature:template")
+include(":feature:reader")
