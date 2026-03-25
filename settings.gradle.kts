@@ -24,7 +24,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Codebase"
+rootProject.name = "oReader"
 
 include(":app")
 
