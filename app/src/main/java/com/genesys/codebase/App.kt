@@ -3,6 +3,7 @@ package com.genesys.codebase
 import android.app.Application
 import com.tencent.mmkv.MMKV
 import dagger.hilt.android.HiltAndroidApp
+import org.koreader.launcher.MainApp
 import timber.log.Timber
 
 /**
@@ -14,6 +15,7 @@ import timber.log.Timber
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        MainApp.initialize(this)
         MMKV.initialize(this)
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())

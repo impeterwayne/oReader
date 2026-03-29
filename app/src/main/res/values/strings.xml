@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">oReader</string>
+
+    <!-- Reader Permission Screen -->
+    <string name="reader_permission_title">Storage Access Required</string>
+    <string name="reader_permission_description">oReader needs storage access to browse and open your documents.</string>
+    <string name="reader_permission_grant_button">Grant Permission</string>
+    <string name="reader_permission_rationale_title">Permission Required</string>
+    <string name="reader_permission_rationale_message">Storage permission is needed to browse and read your documents. Please grant the permission to continue.</string>
+    <string name="reader_permission_denied_message">Storage permission was denied. Please enable it in Settings to use the reader.</string>
+    <string name="reader_permission_settings_button">Open Settings</string>
+    <string name="reader_open_library">Open Library</string>
+    <string name="reader_tap_to_open">Tap to open the embedded document reader</string>
 </resources>

@@ -21,6 +21,10 @@ dependencyResolutionManagement {
         mavenCentral()
         maven { url = uri("https://jitpack.io") }
         maven { url = uri("https://maven.aliyun.com/repository/jcenter") }
+        maven {
+            url = uri("http://repo.boox.com/repository/maven-public/")
+            isAllowInsecureProtocol = true
+        }
     }
 }
 
@@ -34,10 +38,10 @@ include(":core:network")
 include(":core:database")
 include(":core:domain")
 include(":core:data")
-include(":core:ui")
+include(":core:designsystem")
 include(":core:common")
-include(":core:document-reader")
 
 // Feature modules
 include(":feature:template")
-include(":feature:reader")
+include(":feature:notebook")
+include(":feature:koreader")

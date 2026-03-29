@@ -1,7 +1,7 @@
 package com.genesys.core.data.repository.template
 
 import com.genesys.core.common.TimeUtils
-import com.genesys.core.common.base.ResultFlow
+import com.genesys.core.common.base.Result
 import com.genesys.core.data.mmkv.MMKVData
 import com.genesys.core.database.dao.TemplateCollectionsDao
 import com.genesys.core.database.entity.mapper.asDomain
@@ -23,15 +23,15 @@ class TemplateRepositoryImpl @Inject constructor(
     private val templateCollectionsDao: TemplateCollectionsDao
 ) : TemplateRepository {
 
-    override fun getAllTemplates(): Flow<ResultFlow<List<TemplateCollections>>> = flow {
-        emit(ResultFlow.Loading())
+    override fun getAllTemplates(): Flow<Result<List<TemplateCollections>>> = flow {
+        emit(Result.Loading())
 
         val cached = templateCollectionsDao.getAllTemplateCollections().asDomain()
         val shouldFetchFromNetwork =
             TimeUtils.isTimeRangeValidForFetchingData(MMKVData.lastFetchTemplateTime) || cached.isEmpty()
 
         if (!shouldFetchFromNetwork) {
-            emit(ResultFlow.Success(cached))
+            emit(Result.Success(cached))
         } else {
             val response = apiService.getAITemplates()
             response.suspendOnSuccess {
@@ -39,13 +39,13 @@ class TemplateRepositoryImpl @Inject constructor(
                 templateCollectionsDao.clearAllTemplateCollections()
                 templateCollectionsDao.insertTemplateCollections(collections.asEntity())
                 MMKVData.lastFetchTemplateTime = System.currentTimeMillis()
-                emit(ResultFlow.Success(collections))
+                emit(Result.Success(collections))
             }.suspendOnFailure {
                 if (cached.isNotEmpty()) {
                     // Network failed but we have cache — serve stale data
-                    emit(ResultFlow.Success(cached))
+                    emit(Result.Success(cached))
                 } else {
-                    emit(ResultFlow.Error(message()))
+                    emit(Result.Error(message()))
                 }
             }
         }

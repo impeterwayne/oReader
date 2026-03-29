@@ -8,7 +8,7 @@ import android.net.ConnectivityManager
 import android.net.Uri
 import android.widget.Toast
 import androidx.annotation.DrawableRes
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 
 fun Context?.showToast(message: String, length: Int = Toast.LENGTH_SHORT) {
     Toast.makeText(this, message, length).show()
@@ -19,7 +19,7 @@ fun Context?.showToast(messageRes: Int, length: Int = Toast.LENGTH_SHORT) {
 }
 
 fun Context.drawable(@DrawableRes drawable: Int): Drawable? {
-    return AppCompatResources.getDrawable(this, drawable)
+    return ContextCompat.getDrawable(this, drawable)
 }
 
 fun Context.openWebBrowser(url: String) {

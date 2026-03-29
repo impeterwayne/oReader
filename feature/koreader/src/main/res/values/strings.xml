@@ -1,0 +1,7 @@
+<resources>
+    <string name="koreader_error_document_missing">The selected document could not be found.</string>
+    <string name="koreader_error_init_failed">KOReader runtime failed to initialize. Please check storage permissions and try again.</string>
+    <string name="koreader_error_assets_missing">KOReader runtime assets are missing. The application may need to be reinstalled.</string>
+    <string name="koreader_error_native_missing">KOReader native libraries are missing for this device architecture.</string>
+    <string name="koreader_activity_label">KOReader</string>
+</resources>

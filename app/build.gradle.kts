@@ -1,11 +1,16 @@
+import org.gradle.accessors.dm.LibrariesForLibs
+import org.gradle.kotlin.dsl.the
+
 plugins {
-    id("com.android.application")
-    id("org.jetbrains.kotlin.android")
-    id("com.google.dagger.hilt.android")
-    id("com.google.devtools.ksp")
-    id("kotlin-kapt")
-    id("kotlin-parcelize")
+    alias(libs.plugins.androidApplication)
+    alias(libs.plugins.kotlinAndroid)
+    alias(libs.plugins.kotlinCompose)
+    alias(libs.plugins.hiltAndroid)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinParcelize)
 }
+
+val deps = the<LibrariesForLibs>()
 
 android {
     namespace = "com.genesys.codebase"
@@ -23,13 +28,14 @@ android {
 
     buildFeatures {
         buildConfig = true
-        dataBinding = true
+        compose = true
+    }
+
+    androidResources {
+        noCompress += "7z"
     }
 
     buildTypes {
-        debug {
-            // BASE_URL is now in :core:network
-        }
         release {
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -44,45 +50,65 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = true
+        }
+    }
 }
 
 dependencies {
-    // ── Core modules ──
+    // Core modules
     implementation(project(":core:model"))
     implementation(project(":core:network"))
     implementation(project(":core:database"))
     implementation(project(":core:domain"))
     implementation(project(":core:data"))
-    implementation(project(":core:ui"))
     implementation(project(":core:common"))
+    implementation(project(":core:designsystem"))
 
-    // ── Feature modules ──
+    // Feature modules
     implementation(project(":feature:template"))
-    implementation(project(":feature:reader"))
+    implementation(project(":feature:notebook"))
+    implementation(project(":feature:koreader"))
 
-    // ── Android Core ──
-    implementation("androidx.core:core-ktx:1.16.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.12.0")
-    implementation("androidx.activity:activity:1.10.1")
-    implementation("androidx.constraintlayout:constraintlayout:2.2.1")
-    implementation("androidx.startup:startup-runtime:1.2.0")
-    implementation("androidx.multidex:multidex:2.0.1")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
-    implementation("androidx.fragment:fragment-ktx:1.6.1")
+    // AndroidX
+    implementation(deps.androidxCoreKtx)
+    implementation(deps.androidxStartupRuntime)
+    implementation(deps.androidxMultidex)
+
+    // Compose
+    implementation(platform(deps.composeBom))
+    implementation(deps.composeFoundation)
+    implementation(deps.composeUi)
+    implementation(deps.composeUiGraphics)
+    implementation(deps.composeUiToolingPreview)
+    implementation(deps.activityCompose)
+    implementation(deps.navigationCompose)
+    implementation(deps.hiltNavigationCompose)
+    implementation(deps.androidxLifecycleRuntimeCompose)
+    debugImplementation(deps.composeUiTooling)
+
+    // ImmersionBar
+    implementation(deps.immersionbar)
+    implementation(deps.immersionbarKtx)
+
+    // Permissions
+    implementation(deps.xxpermissionKtx)
 
     // Hilt
-    implementation("com.google.dagger:hilt-android:2.53")
-    ksp("com.google.dagger:hilt-compiler:2.53")
+    implementation(deps.hiltAndroid)
+    ksp(deps.hiltCompiler)
 
-    // MMKV (initialized in App.kt)
-    implementation("com.tencent:mmkv:1.3.14")
+    // MMKV
+    implementation(deps.mmkv)
 
     // Timber
-    implementation("com.jakewharton.timber:timber:5.0.1")
+    implementation(deps.timber)
 
     // Testing
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.3.0")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
+    testImplementation(deps.junit)
+    androidTestImplementation(deps.androidxJunit)
+    androidTestImplementation(deps.androidxEspressoCore)
 }

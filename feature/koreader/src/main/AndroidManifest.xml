@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-permission
+        android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+
+    <application>
+        <activity
+            android:name="com.genesys.feature.koreader.host.KoreaderActivity"
+            android:label="@string/koreader_activity_label"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false" />
+
+        <activity
+            android:name="org.koreader.launcher.MainActivity"
+            android:label="@string/koreader_activity_label"
+            android:process=":koreader"
+            android:configChanges="colorMode|density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:resizeableActivity="false"
+            android:screenOrientation="nosensor"
+            android:theme="@style/SplashScreen"
+            tools:ignore="NonResizeableActivity">
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="luajit-launcher" />
+        </activity>
+
+        <activity
+            android:name="org.koreader.launcher.CrashReportActivity"
+            android:process=":koreader"
+            android:exported="false"
+            android:label="CrashReport"
+            android:theme="@style/NoTitle" />
+    </application>
+
+</manifest>

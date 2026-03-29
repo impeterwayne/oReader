@@ -18,9 +18,10 @@ kotlin {
 }
 
 dependencies {
-    compileOnly(libs.android.gradlePlugin)
-    compileOnly(libs.kotlin.gradlePlugin)
-    compileOnly(libs.ksp.gradlePlugin)
+    compileOnly(libs.androidGradlePlugin)
+    compileOnly(libs.kotlinGradlePlugin)
+    compileOnly(libs.kspGradlePlugin)
+    compileOnly(libs.composeGradlePlugin)
 }
 
 tasks {
@@ -44,13 +45,17 @@ gradlePlugin {
             id = "codebase.android.hilt"
             implementationClass = "AndroidHiltConventionPlugin"
         }
+        register("androidCompose") {
+            id = "codebase.android.compose"
+            implementationClass = "AndroidComposeConventionPlugin"
+        }
         register("jvmLibrary") {
             id = "codebase.jvm.library"
             implementationClass = "JvmLibraryConventionPlugin"
         }
-        register("androidJni") {
-            id = "codebase.android.jni"
-            implementationClass = "AndroidJniConventionPlugin"
+        register("androidKoreader") {
+            id = "codebase.android.koreader"
+            implementationClass = "AndroidKoreaderConventionPlugin"
         }
     }
 }
