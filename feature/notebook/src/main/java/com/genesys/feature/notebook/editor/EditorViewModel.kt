@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import android.net.Uri
 import android.util.Log
+import com.genesys.feature.notebook.R
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -116,6 +117,8 @@ sealed class ToolbarAction {
     object NavigateToBugReport : ToolbarAction()
     object NavigateToPages : ToolbarAction()
     object NavigateToHome : ToolbarAction()
+    object NextPage : ToolbarAction()
+    object PreviousPage : ToolbarAction()
 
     object CloseAllMenus : ToolbarAction()
     data class UpdateQuickNavOpen(val isOpen: Boolean) : ToolbarAction()
@@ -269,6 +272,8 @@ class EditorViewModel @Inject constructor(
             ToolbarAction.NavigateToBugReport -> sendUiEvent(EditorUiEvent.NavigateToBugReport)
             ToolbarAction.NavigateToPages -> handleNavigateToPages()
             ToolbarAction.NavigateToHome -> sendUiEvent(EditorUiEvent.NavigateToLibrary(null))
+            ToolbarAction.NextPage -> goToNextPage()
+            ToolbarAction.PreviousPage -> goToPreviousPage()
 
             ToolbarAction.CloseAllMenus -> handleCloseAllMenus()
             is ToolbarAction.UpdateQuickNavOpen -> {
@@ -511,7 +516,29 @@ class EditorViewModel @Inject constructor(
     fun goToNextPage() {
         Log.v(TAG, "goToNextPage")
         viewModelScope.launch(Dispatchers.IO) {
-            getNextPageId()?.let { changePage(it) }
+            val nextPageId = getNextPageId()
+            if (nextPageId != null) {
+                changePage(nextPageId)
+            } else {
+                // Only create a new page if the current page has content
+                val hasStrokes = pageDataManager.getStrokes(currentPageId).isNotEmpty()
+                val hasImages = pageDataManager.getImages(currentPageId).isNotEmpty()
+                if (!hasStrokes && !hasImages) {
+                    val msg = context.getString(R.string.notebook_page_empty_write_first)
+                    SnackState.globalSnackFlow.emit(SnackConf(text = msg, duration = 3000))
+                    return@launch
+                }
+                bookId?.let { id ->
+                    val newPage = com.genesys.core.model.notebook.NotebookPage(
+                        notebookId = id,
+                        backgroundType = _toolbarState.value.backgroundType,
+                        background = _toolbarState.value.backgroundPath
+                    )
+                    pageRepository.create(newPage)
+                    notebookRepository.addPage(id, newPage.id)
+                    changePage(newPage.id)
+                }
+            }
         }
     }
 
@@ -538,7 +565,32 @@ class EditorViewModel @Inject constructor(
         }
         if (newPageId != currentPageId) {
             Log.d(TAG, "Page changed")
-            _toolbarState.update { it.copy(pageId = newPageId) }
+
+            // Refresh page number info and background from repository
+            val book = bookId?.let { notebookRepository.getById(it) }
+            val pageIndex = bookId?.let { notebookRepository.getPageIndex(it, newPageId) } ?: 0
+            val totalPages = book?.pageIds?.size ?: 1
+            val page = pageRepository.getById(newPageId)
+
+            val backgroundType = page?.backgroundType ?: _toolbarState.value.backgroundType
+            val backgroundPath = page?.background ?: _toolbarState.value.backgroundPath
+            val backgroundTypeObj = BackgroundType.fromKey(backgroundType)
+            val bgPageNumber = when (backgroundTypeObj) {
+                is BackgroundType.Pdf -> backgroundTypeObj.page
+                is BackgroundType.AutoPdf -> pageIndex
+                else -> 0
+            }
+
+            _toolbarState.update {
+                it.copy(
+                    pageId = newPageId,
+                    pageNumberInfo = if (bookId != null) "${(pageIndex ?: 0) + 1}/$totalPages" else "1/1",
+                    currentPageNumber = pageIndex ?: 0,
+                    backgroundType = backgroundType,
+                    backgroundPath = backgroundPath,
+                    backgroundPageNumber = bgPageNumber ?: 0
+                )
+            }
         } else {
             Log.d(TAG, "Tried to change to same page!")
             val snack = SnackConf(text = "Tried to change to same page!", duration = 4000)

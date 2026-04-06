@@ -266,6 +266,11 @@ fun ToolbarContent(
                 VerticalDivider()
 
                 if (uiState.notebookId != null) {
+                    ToolbarButton(
+                        iconId = R.drawable.arrow_left,
+                        contentDescription = "previous page",
+                        onSelect = { onAction(ToolbarAction.PreviousPage) }
+                    )
                     Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
@@ -279,6 +284,11 @@ fun ToolbarContent(
                             textAlign = TextAlign.Center
                         )
                     }
+                    ToolbarButton(
+                        iconId = R.drawable.arrow_right,
+                        contentDescription = "next page",
+                        onSelect = { onAction(ToolbarAction.NextPage) }
+                    )
                     VerticalDivider()
                 }
 

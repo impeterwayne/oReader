@@ -27,6 +27,7 @@
     <string name="notebook_page_no_preview">Page %1$d — No Preview</string>
     <string name="notebook_nothing_selected">There isn\'t anything.</string>
     <string name="notebook_page_empty">Page is empty!</string>
+    <string name="notebook_page_empty_write_first">Current page is empty. Write something first.</string>
     <string name="notebook_waiting_drawing">Waiting for drawing to finish…</string>
     <string name="notebook_image_processing_error">There was an error during image processing.</string>
     <string name="notebook_background_changed">Background file changed</string>
