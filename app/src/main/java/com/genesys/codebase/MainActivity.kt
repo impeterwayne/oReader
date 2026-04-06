@@ -1,21 +1,32 @@
 package com.genesys.codebase
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.codebase.navigation.AppShell
 import com.genesys.codebase.reader.ReaderLibraryEvents
 import com.genesys.codebase.reader.ReaderLibraryRepository
+import com.genesys.core.data.repository.notebook.NotebookSettingsManager
+import com.genesys.feature.notebook.editor.canvas.CanvasEventBus
+import com.genesys.feature.notebook.data.EditorSettingCacheManager
+import com.genesys.feature.notebook.data.PageDataManager
+import com.genesys.feature.notebook.data.ScreenDimensions
+import com.genesys.feature.notebook.editor.settings.NotebookSettingsProvider
 import com.genesys.feature.koreader.bridge.KoreaderStorageBridge
 import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ktx.immersionBar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -34,6 +45,15 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var readerLibraryEvents: ReaderLibraryEvents
 
+    @Inject
+    lateinit var pageDataManager: PageDataManager
+
+    @Inject
+    lateinit var notebookSettingsManager: NotebookSettingsManager
+
+    @Inject
+    lateinit var editorSettingCacheManager: EditorSettingCacheManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -46,6 +66,18 @@ class MainActivity : ComponentActivity() {
         }
 
         enableEdgeToEdge()
+        enableOnyxFullscreen()
+        syncScreenDimensions()
+        pageDataManager.registerComponentCallbacks(applicationContext)
+
+        lifecycleScope.launch {
+            notebookSettingsManager.load()
+            editorSettingCacheManager.init()
+            NotebookSettingsProvider.updateFromModel(notebookSettingsManager.snapshot)
+            notebookSettingsManager.current.collectLatest { settings ->
+                NotebookSettingsProvider.updateFromModel(settings)
+            }
+        }
 
         // Handle incoming document intents (ACTION_VIEW, SEND)
         if (savedInstanceState == null) {
@@ -62,6 +94,36 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         handleIncomingIntent(intent)
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+        lifecycleScope.launch {
+            CanvasEventBus.reinitSignal.emit(Unit)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        lifecycleScope.launch {
+            CanvasEventBus.refreshUi.emit(Unit)
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            enableOnyxFullscreen()
+            syncScreenDimensions()
+        }
+        lifecycleScope.launch {
+            CanvasEventBus.onFocusChange.emit(hasFocus)
+        }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        syncScreenDimensions()
     }
 
     /**
@@ -124,5 +186,27 @@ class MainActivity : ComponentActivity() {
         }
 
         return parts.takeIf { it.isNotEmpty() }?.joinToString(". ")
+    }
+
+    private fun enableOnyxFullscreen() {
+        val optimizeIntent = Intent("com.onyx.app.optimize.setting").apply {
+            putExtra("optimize_fullScreen", true)
+            putExtra("optimize_pkgName", packageName)
+        }
+        sendBroadcast(optimizeIntent)
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowCompat.getInsetsController(window, window.decorView)
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        controller.hide(WindowInsetsCompat.Type.systemBars())
+    }
+
+    private fun syncScreenDimensions() {
+        val metrics = applicationContext.resources.displayMetrics
+        ScreenDimensions.init(
+            width = metrics.widthPixels,
+            height = metrics.heightPixels
+        )
     }
 }

@@ -1,6 +1,7 @@
 package com.genesys.core.database.converters
 
 import com.genesys.core.model.notebook.NotebookStrokePoint
+import net.jpountz.lz4.LZ4Factory
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import kotlin.math.pow
@@ -20,14 +21,42 @@ private const val Magic0: Byte = 'S'.code.toByte()
 private const val Magic1: Byte = 'B'.code.toByte()
 private const val FormatVersion: Byte = 1
 private const val CompressionNone: Byte = 0
+private const val CompressionLz4: Byte = 1
 private const val HeaderSize = 1 + 1 + 1 + 1 + 4 + 1
 private const val EncodingPrecisionXy = 2
 private const val MaxDeltaTimeValue = 0xFFFE
+private const val MinBytesForCompression = 512
+private const val MinSavingRatio = 0.75
+
+private val lz4Factory = LZ4Factory.fastestInstance()
+private val lz4Compressor = lz4Factory.highCompressor()
+private val lz4Decompressor = lz4Factory.fastDecompressor()
 
 private fun Int.hasPressure() = (this and PressureMask) != 0
 private fun Int.hasTiltX() = (this and TiltXMask) != 0
 private fun Int.hasTiltY() = (this and TiltYMask) != 0
 private fun Int.hasDeltaTime() = (this and DeltaTimeMask) != 0
+
+private fun lz4Compress(rawBody: ByteArray): ByteArray {
+    val maxCompressedLength = lz4Compressor.maxCompressedLength(rawBody.size)
+    val compressed = ByteArray(maxCompressedLength)
+    val compressedSize =
+        lz4Compressor.compress(rawBody, 0, rawBody.size, compressed, 0, maxCompressedLength)
+    return compressed.copyOf(compressedSize)
+}
+
+private fun compressBody(rawBody: ByteArray): Pair<Byte, ByteArray> {
+    if (rawBody.size < MinBytesForCompression) {
+        return CompressionNone to rawBody
+    }
+
+    val compressed = lz4Compress(rawBody)
+    return if (compressed.size.toDouble() <= rawBody.size * MinSavingRatio) {
+        CompressionLz4 to compressed
+    } else {
+        CompressionNone to rawBody
+    }
+}
 
 fun computeNotebookStrokeMask(points: List<NotebookStrokePoint>): Int {
     require(points.isNotEmpty()) { "Stroke points cannot be empty." }
@@ -83,38 +112,48 @@ fun encodeNotebookStrokePoints(
     val bodySize =
         4 + encodedX.size +
             4 + encodedY.size +
-            if (mask.hasPressure()) count * 2 else 0 +
-            if (mask.hasTiltX()) count else 0 +
-            if (mask.hasTiltY()) count else 0 +
-            if (mask.hasDeltaTime()) count * 2 else 0
+            (if (mask.hasPressure()) count * 2 else 0) +
+            (if (mask.hasTiltX()) count else 0) +
+            (if (mask.hasTiltY()) count else 0) +
+            (if (mask.hasDeltaTime()) count * 2 else 0)
 
-    val buffer = ByteBuffer.allocate(HeaderSize + bodySize).order(ByteOrder.LITTLE_ENDIAN)
+    val rawBody = ByteBuffer.allocate(bodySize).order(ByteOrder.LITTLE_ENDIAN).apply {
+        putInt(encodedX.size)
+        put(encodedX)
+        putInt(encodedY.size)
+        put(encodedY)
+
+        if (mask.hasPressure()) {
+            points.forEach { putShort(it.pressure!!.toInt().toShort()) }
+        }
+        if (mask.hasTiltX()) {
+            points.forEach { put(it.tiltX!!.toByte()) }
+        }
+        if (mask.hasTiltY()) {
+            points.forEach { put(it.tiltY!!.toByte()) }
+        }
+        if (mask.hasDeltaTime()) {
+            points.forEach { point ->
+                putShort(point.dt!!.toInt().coerceIn(0, MaxDeltaTimeValue).toShort())
+            }
+        }
+    }.array()
+
+    val (compressionFlag, finalBody) = compressBody(rawBody)
+    val compressedHeaderSize = if (compressionFlag == CompressionLz4) 4 else 0
+    val buffer = ByteBuffer
+        .allocate(HeaderSize + compressedHeaderSize + finalBody.size)
+        .order(ByteOrder.LITTLE_ENDIAN)
     buffer.put(Magic0)
     buffer.put(Magic1)
     buffer.put(FormatVersion)
     buffer.put(mask.toByte())
     buffer.putInt(count)
-    buffer.put(CompressionNone)
-
-    buffer.putInt(encodedX.size)
-    buffer.put(encodedX)
-    buffer.putInt(encodedY.size)
-    buffer.put(encodedY)
-
-    if (mask.hasPressure()) {
-        points.forEach { buffer.putShort(it.pressure!!.toInt().toShort()) }
+    buffer.put(compressionFlag)
+    if (compressionFlag == CompressionLz4) {
+        buffer.putInt(rawBody.size)
     }
-    if (mask.hasTiltX()) {
-        points.forEach { buffer.put(it.tiltX!!.toByte()) }
-    }
-    if (mask.hasTiltY()) {
-        points.forEach { buffer.put(it.tiltY!!.toByte()) }
-    }
-    if (mask.hasDeltaTime()) {
-        points.forEach { point ->
-            buffer.putShort(point.dt!!.toInt().coerceIn(0, MaxDeltaTimeValue).toShort())
-        }
-    }
+    buffer.put(finalBody)
 
     return buffer.array()
 }
@@ -129,18 +168,32 @@ fun decodeNotebookStrokePoints(bytes: ByteArray): List<NotebookStrokePoint> {
     val mask = buffer.get().toInt() and 0xFF
     val count = buffer.int
     require(count >= 0) { "Negative point count is invalid." }
-    require(buffer.get() == CompressionNone) { "Compressed stroke payloads are not supported yet." }
+    val compressionFlag = buffer.get()
+    val bodyBuffer = when (compressionFlag) {
+        CompressionNone -> buffer
+        CompressionLz4 -> {
+            require(buffer.remaining() >= 4) { "Missing raw size for compressed stroke payload." }
+            val rawSize = buffer.int
+            require(rawSize > 0) { "Invalid raw size for compressed stroke payload." }
+            val compressed = ByteArray(buffer.remaining())
+            buffer.get(compressed)
+            val decompressed = ByteArray(rawSize)
+            lz4Decompressor.decompress(compressed, 0, decompressed, 0, rawSize)
+            ByteBuffer.wrap(decompressed).order(ByteOrder.LITTLE_ENDIAN)
+        }
+        else -> error("Unknown stroke compression flag $compressionFlag")
+    }
 
-    val xValues = decodeFloatSection(buffer, precision = EncodingPrecisionXy)
-    val yValues = decodeFloatSection(buffer, precision = EncodingPrecisionXy)
+    val xValues = decodeFloatSection(bodyBuffer, precision = EncodingPrecisionXy)
+    val yValues = decodeFloatSection(bodyBuffer, precision = EncodingPrecisionXy)
     require(xValues.size == count && yValues.size == count) {
         "Decoded point count does not match header."
     }
 
-    val pressures = if (mask.hasPressure()) ShortArray(count) { buffer.short } else null
-    val tiltXs = if (mask.hasTiltX()) ByteArray(count) { buffer.get() } else null
-    val tiltYs = if (mask.hasTiltY()) ByteArray(count) { buffer.get() } else null
-    val deltaTimes = if (mask.hasDeltaTime()) ShortArray(count) { buffer.short } else null
+    val pressures = if (mask.hasPressure()) ShortArray(count) { bodyBuffer.short } else null
+    val tiltXs = if (mask.hasTiltX()) ByteArray(count) { bodyBuffer.get() } else null
+    val tiltYs = if (mask.hasTiltY()) ByteArray(count) { bodyBuffer.get() } else null
+    val deltaTimes = if (mask.hasDeltaTime()) ShortArray(count) { bodyBuffer.short } else null
 
     return List(count) { index ->
         NotebookStrokePoint(

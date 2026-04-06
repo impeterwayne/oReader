@@ -15,6 +15,9 @@ enum class NotebookPen(val penName: String) {
         fun fromName(name: String?): NotebookPen {
             return entries.find { it.penName.equals(name, ignoreCase = true) } ?: BALLPEN
         }
+
+        /** Alias matching Notable's original `Pen.fromString()` for ported call-sites. */
+        fun fromString(name: String?) = fromName(name)
     }
 }
 

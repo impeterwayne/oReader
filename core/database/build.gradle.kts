@@ -32,6 +32,9 @@ dependencies {
     implementation(deps.moshi)
     implementation(deps.moshiKotlin)
 
+    // Stroke payload compatibility with Notable's SB1 + LZ4 encoding
+    implementation("at.yawk.lz4:lz4-java:1.10.3")
+
     // Coroutines
     implementation(deps.kotlinxCoroutinesCore)
     implementation(deps.kotlinxCoroutinesAndroid)

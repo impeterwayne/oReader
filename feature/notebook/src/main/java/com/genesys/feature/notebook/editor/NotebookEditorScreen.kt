@@ -1,28 +1,64 @@
 package com.genesys.feature.notebook.editor
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.genesys.core.designsystem.component.GenesysPrimaryButton
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
+import com.genesys.feature.notebook.ui.LocalSnackContext
+import com.genesys.feature.notebook.ui.SnackState
 
 @Composable
 fun NotebookEditorRoute(
+    pageId: String?,
+    bookId: String?,
     onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    goToPages: (String) -> Unit = {},
+    goToBugReport: () -> Unit = {}
+) {
+    val snackState = remember { SnackState() }
+
+    CompositionLocalProvider(LocalSnackContext provides snackState) {
+        if (pageId == null) {
+            NotebookEditorStatus(
+                modifier = modifier,
+                title = "Notebook unavailable",
+                message = "No notebook page could be opened.",
+                buttonLabel = "Back to library",
+                onClick = onBack
+            )
+        } else {
+            EditorView(
+                initialPageId = pageId,
+                bookId = bookId,
+                isQuickNavOpen = false,
+                onPageChange = {},
+                goToLibrary = { onBack() },
+                goToPages = goToPages,
+                goToBugReport = goToBugReport
+            )
+        }
+    }
+}
+
+@Composable
+private fun NotebookEditorStatus(
+    title: String,
+    message: String,
+    buttonLabel: String,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -37,55 +73,19 @@ fun NotebookEditorRoute(
             modifier = Modifier.statusBarsPadding()
         ) {
             GenesysText(
-                text = "Notebook Editor",
+                text = title,
                 style = GenesysTheme.typography.titleLarge
             )
             GenesysText(
-                text = "This route is wired into the host app. Canvas persistence, page tools, and Onyx behavior follow in later tasks.",
+                text = message,
                 style = GenesysTheme.typography.bodyLarge,
                 color = GenesysTheme.colors.outline
             )
         }
 
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .border(1.dp, Color(0xFF2D2A26))
-                .background(Color(0xFFFFFBF5))
-                .padding(12.dp)
-        ) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val step = 56.dp.toPx()
-                val stroke = 1.dp.toPx()
-
-                var x = 0f
-                while (x < size.width) {
-                    drawLine(
-                        color = Color(0x1F000000),
-                        start = Offset(x, 0f),
-                        end = Offset(x, size.height),
-                        strokeWidth = stroke
-                    )
-                    x += step
-                }
-
-                var y = 0f
-                while (y < size.height) {
-                    drawLine(
-                        color = Color(0x12000000),
-                        start = Offset(0f, y),
-                        end = Offset(size.width, y),
-                        strokeWidth = stroke
-                    )
-                    y += step
-                }
-            }
-        }
-
         GenesysPrimaryButton(
-            text = "Back to library",
-            onClick = onBack,
+            text = buttonLabel,
+            onClick = onClick,
             modifier = Modifier.height(48.dp)
         )
     }

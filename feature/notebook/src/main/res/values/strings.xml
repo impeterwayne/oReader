@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Notebook Editor -->
+    <string name="notebook_editor_title">Notebook Editor</string>
+    <string name="notebook_select_background">Select Background</string>
+    <string name="notebook_cancel">Cancel</string>
+    <string name="notebook_ok">OK</string>
+    <string name="notebook_undo">Undo</string>
+    <string name="notebook_redo">Redo</string>
+    <string name="notebook_pen">Pen</string>
+    <string name="notebook_eraser">Eraser</string>
+    <string name="notebook_select">Select</string>
+    <string name="notebook_line">Line</string>
+    <string name="notebook_delete">Delete</string>
+    <string name="notebook_copy">Copy</string>
+    <string name="notebook_paste">Paste</string>
+    <string name="notebook_cut">Cut</string>
+    <string name="notebook_clear_page">Clear Page</string>
+    <string name="notebook_add_image">Add Image</string>
+    <string name="notebook_export">Export</string>
+    <string name="notebook_share">Share</string>
+    <string name="notebook_settings">Settings</string>
+    <string name="notebook_page">Page</string>
+    <string name="notebook_next_page">Next Page</string>
+    <string name="notebook_previous_page">Previous Page</string>
+    <string name="notebook_no_preview">No Preview</string>
+    <string name="notebook_page_no_preview">Page %1$d — No Preview</string>
+    <string name="notebook_nothing_selected">There isn\'t anything.</string>
+    <string name="notebook_page_empty">Page is empty!</string>
+    <string name="notebook_waiting_drawing">Waiting for drawing to finish…</string>
+    <string name="notebook_image_processing_error">There was an error during image processing.</string>
+    <string name="notebook_background_changed">Background file changed</string>
+    <string name="notebook_background_missing">Background does not exist</string>
+    <string name="notebook_move_left">Move Left</string>
+    <string name="notebook_move_right">Move Right</string>
+    <string name="notebook_insert_after">Insert After</string>
+    <string name="notebook_duplicate">Duplicate</string>
+    <string name="toolbar_scribble_to_erase_two_lined_short">Scribble to erase</string>
+    <string name="home_view_name">Library</string>
+    <string name="export_page_to">Export page to %1$s</string>
+    <string name="export_book_to">Export book to %1$s</string>
+    <string name="clean_all_strokes">Clear all strokes</string>
+    <string name="change_background">Change background</string>
+    <string name="bug_report">Bug report</string>
+
+    <!-- BackgroundSelector strings -->
+    <string name="repeat_background">Repeat background</string>
+    <string name="notebook_bg_blank">Blank</string>
+    <string name="notebook_bg_dotted">Dot Grid</string>
+    <string name="notebook_bg_lined">Lines</string>
+    <string name="notebook_bg_squared">Small Squares Grid</string>
+    <string name="notebook_bg_hexed">Hexagon Grid</string>
+    <string name="notebook_choose_native_template">Choose Native Template</string>
+    <string name="notebook_choose_pdf_background">Choose PDF Background</string>
+    <string name="notebook_select_pdf_page">Select PDF page</string>
+    <string name="notebook_page_number">Page number</string>
+    <string name="notebook_observe_pdf">Observe PDF</string>
+    <string name="notebook_current_page">Current page</string>
+    <string name="notebook_pdf_has_pages">PDF has %1$d pages</string>
+    <string name="notebook_pdf_no_pages">No pages found</string>
+
+    <!-- NotebookConfig strings -->
+    <string name="notebook_config_title">Title</string>
+    <string name="notebook_config_default_background">Default background</string>
+    <string name="notebook_config_pages">Pages: %1$d</string>
+    <string name="notebook_config_created">Created: %1$s</string>
+    <string name="notebook_config_last_updated">Last updated: %1$s</string>
+    <string name="notebook_config_btn_delete">Delete</string>
+    <string name="notebook_config_btn_move">Move</string>
+    <string name="notebook_config_btn_export">Export</string>
+    <string name="notebook_config_btn_copy">Copy</string>
+    <string name="notebook_config_delete_confirm_title">Confirm Deletion</string>
+    <string name="notebook_config_delete_confirm_message">Are you sure you want to delete \"%1$s\"?</string>
+    <string name="notebook_config_background_type_observe_pdf">Observe Pdf</string>
+    <string name="notebook_config_background_type_cover_image">Cover Image</string>
+    <string name="notebook_config_background_type_image">Image</string>
+    <string name="notebook_config_background_type_repeating_image">Repeating Image</string>
+    <string name="notebook_config_background_type_native">Native</string>
+    <string name="notebook_config_background_type_static_pdf">Static PDF Page</string>
+</resources>

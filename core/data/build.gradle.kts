@@ -30,6 +30,10 @@ dependencies {
     implementation(deps.sandwich)
     implementation(deps.sandwichRetrofit)
 
+    // Moshi
+    implementation(deps.moshi)
+    implementation(deps.moshiKotlin)
+
     // Timber
     implementation(deps.timber)
 }

@@ -107,6 +107,13 @@ dependencies {
     // Timber
     implementation(deps.timber)
 
+    // Onyx runtime init mirrors Notable's Application startup path.
+    implementation("com.onyx.android.sdk:onyxsdk-base:1.8.3") {
+        exclude(group = "com.android.support", module = "support-compat")
+        exclude(group = "com.android.support", module = "appcompat-v7")
+    }
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:6.1")
+
     // Testing
     testImplementation(deps.junit)
     androidTestImplementation(deps.androidxJunit)

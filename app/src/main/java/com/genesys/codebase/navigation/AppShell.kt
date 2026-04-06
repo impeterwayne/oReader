@@ -21,15 +21,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.genesys.codebase.reader.ReaderScreenRoute
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
+import com.genesys.feature.notebook.editor.EditorDestination
 import com.genesys.feature.notebook.editor.NotebookEditorRoute
 import com.genesys.feature.notebook.library.NotebookLibraryRoute
+import com.genesys.feature.notebook.pages.NotebookPagesDestination
+import com.genesys.feature.notebook.pages.NotebookPagesRoute
 
 private enum class AppDestination(
     val route: String,
@@ -68,12 +73,50 @@ fun AppShell(
                 }
                 composable(AppDestination.Notebook.route) {
                     NotebookLibraryRoute(
-                        onOpenNotebook = { navController.navigate("notebook-editor") }
+                        onOpenNotebook = { pageId, bookId ->
+                            navController.navigate(EditorDestination.createRoute(pageId, bookId))
+                        }
                     )
                 }
-                composable("notebook-editor") {
+                composable(
+                    route = EditorDestination.routeWithArgs,
+                    arguments = listOf(
+                        navArgument(EditorDestination.PAGE_ID_ARG) { type = NavType.StringType },
+                        navArgument(EditorDestination.BOOK_ID_ARG) {
+                            type = NavType.StringType
+                            nullable = true
+                            defaultValue = null
+                        }
+                    )
+                ) { backStackEntry ->
                     NotebookEditorRoute(
-                        onBack = { navController.popBackStack() }
+                        pageId = backStackEntry.arguments?.getString(EditorDestination.PAGE_ID_ARG),
+                        bookId = backStackEntry.arguments?.getString(EditorDestination.BOOK_ID_ARG),
+                        onBack = { navController.popBackStack() },
+                        goToPages = { bookId ->
+                            navController.navigate(NotebookPagesDestination.createRoute(bookId))
+                        }
+                    )
+                }
+                composable(
+                    route = NotebookPagesDestination.routeWithArgs,
+                    arguments = listOf(
+                        navArgument(NotebookPagesDestination.BOOK_ID_ARG) {
+                            type = NavType.StringType
+                        }
+                    )
+                ) { backStackEntry ->
+                    val bookId =
+                        backStackEntry.arguments?.getString(NotebookPagesDestination.BOOK_ID_ARG)
+                            ?: return@composable
+                    NotebookPagesRoute(
+                        bookId = bookId,
+                        onBack = { navController.popBackStack() },
+                        onOpenPage = { pageId, resolvedBookId ->
+                            navController.navigate(
+                                EditorDestination.createRoute(pageId, resolvedBookId)
+                            )
+                        }
                     )
                 }
             }

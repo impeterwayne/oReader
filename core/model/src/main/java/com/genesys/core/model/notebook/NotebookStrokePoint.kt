@@ -6,5 +6,7 @@ data class NotebookStrokePoint(
     val pressure: Float? = null,
     val tiltX: Int? = null,
     val tiltY: Int? = null,
-    val dt: UShort? = null
+    val dt: UShort? = null,
+    val legacyTimestamp: Long? = null,
+    val legacySize: Float? = null,
 )

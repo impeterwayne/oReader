@@ -12,40 +12,111 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
 import com.genesys.core.designsystem.component.GenesysPanel
 import com.genesys.core.designsystem.component.GenesysPanelTone
 import com.genesys.core.designsystem.component.GenesysPrimaryButton
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
-import androidx.compose.ui.Modifier
+import com.genesys.core.domain.repository.notebook.NotebookPageRepository
+import com.genesys.core.domain.repository.notebook.NotebookRepository
+import com.genesys.core.model.notebook.Notebook
+import com.genesys.core.model.notebook.NotebookPage
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-import androidx.compose.ui.unit.dp
-
-private data class NotebookPreview(
-    val title: String,
-    val details: String
+data class NotebookLibraryUiState(
+    val isLoading: Boolean = true,
+    val notebooks: List<Notebook> = emptyList(),
+    val quickPages: List<NotebookPage> = emptyList()
 )
 
-private val previews = listOf(
-    NotebookPreview(
-        title = "Meeting Notes",
-        details = "Compose shell is live. Shared data and Room storage land in the next slice."
-    ),
-    NotebookPreview(
-        title = "Quick Pages",
-        details = "Library, editor, and reader entry points now share one host application."
-    ),
-    NotebookPreview(
-        title = "Import Queue",
-        details = "File provider wiring is in place so later export and share tasks can attach cleanly."
-    )
-)
+@HiltViewModel
+class NotebookLibraryViewModel @Inject constructor(
+    private val notebookRepository: NotebookRepository,
+    private val pageRepository: NotebookPageRepository
+) : ViewModel() {
+
+    private val _uiState = MutableStateFlow(NotebookLibraryUiState())
+    val uiState: StateFlow<NotebookLibraryUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            combine(
+                notebookRepository.observeInFolder(null),
+                pageRepository.observeStandalonePages(null)
+            ) { notebooks, quickPages ->
+                NotebookLibraryUiState(
+                    isLoading = false,
+                    notebooks = notebooks,
+                    quickPages = quickPages
+                )
+            }.collect { state ->
+                _uiState.value = state
+            }
+        }
+    }
+
+    fun openNotebook(notebookId: String, onOpen: (String, String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val notebook = notebookRepository.getById(notebookId) ?: return@launch
+            val targetPageId = notebook.openPageId ?: notebook.pageIds.firstOrNull() ?: run {
+                val newPage = notebook.newPage()
+                pageRepository.create(newPage)
+                notebookRepository.addPage(notebook.id, newPage.id)
+                notebookRepository.setOpenPageId(notebook.id, newPage.id)
+                newPage.id
+            }
+            withContext(Dispatchers.Main) {
+                onOpen(targetPageId, notebook.id)
+            }
+        }
+    }
+
+    fun createNotebook(onOpen: (String, String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val notebook = Notebook()
+            notebookRepository.create(notebook)
+            val created = notebookRepository.getById(notebook.id) ?: return@launch
+            val targetPageId = created.openPageId ?: created.pageIds.firstOrNull() ?: return@launch
+            withContext(Dispatchers.Main) {
+                onOpen(targetPageId, created.id)
+            }
+        }
+    }
+
+    fun createQuickPage(onOpen: (String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val page = NotebookPage()
+            pageRepository.create(page)
+            withContext(Dispatchers.Main) {
+                onOpen(page.id)
+            }
+        }
+    }
+}
 
 @Composable
 fun NotebookLibraryRoute(
-    onOpenNotebook: () -> Unit,
-    modifier: Modifier = Modifier
+    onOpenNotebook: (pageId: String, bookId: String?) -> Unit,
+    modifier: Modifier = Modifier,
+    viewModel: NotebookLibraryViewModel = hiltViewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
@@ -64,41 +135,120 @@ fun NotebookLibraryRoute(
                     color = GenesysTheme.colors.primary
                 )
                 GenesysText(
-                    text = "The launcher now opens a notebook-first shell.",
+                    text = "This route now opens real notebooks and quick pages from local storage instead of a sample host.",
                     style = GenesysTheme.typography.bodyLarge,
                     color = GenesysTheme.colors.outline
                 )
             }
         }
 
-        item {
+        item(key = "actions") {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 GenesysPrimaryButton(
-                    text = "Open sample notebook",
-                    onClick = onOpenNotebook
+                    text = "New notebook",
+                    onClick = {
+                        viewModel.createNotebook { pageId, bookId ->
+                            onOpenNotebook(pageId, bookId)
+                        }
+                    }
+                )
+                GenesysPrimaryButton(
+                    text = "Quick page",
+                    onClick = {
+                        viewModel.createQuickPage { pageId ->
+                            onOpenNotebook(pageId, null)
+                        }
+                    }
                 )
             }
         }
 
-        items(previews) { preview ->
+        if (uiState.isLoading) {
+            item(key = "loading") {
+                GenesysPanel(
+                    modifier = Modifier.fillMaxWidth(),
+                    tone = GenesysPanelTone.Raised,
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    GenesysText(
+                        text = "Loading notebooks",
+                        style = GenesysTheme.typography.titleMedium
+                    )
+                }
+            }
+        }
+
+        items(
+            items = uiState.notebooks,
+            key = { notebook -> notebook.id }
+        ) { notebook ->
             GenesysPanel(
                 modifier = Modifier.fillMaxWidth(),
                 tone = GenesysPanelTone.Raised,
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                onClick = {
+                    viewModel.openNotebook(notebook.id) { pageId, bookId ->
+                        onOpenNotebook(pageId, bookId)
+                    }
+                }
             ) {
                 GenesysText(
-                    text = preview.title,
+                    text = notebook.title,
                     style = GenesysTheme.typography.titleMedium
                 )
                 GenesysText(
-                    text = preview.details,
+                    text = "${notebook.pageIds.size} page(s)",
                     style = GenesysTheme.typography.bodyMedium,
                     color = GenesysTheme.colors.outline
                 )
             }
         }
 
-        item {
+        items(
+            items = uiState.quickPages,
+            key = { page -> page.id }
+        ) { page ->
+            GenesysPanel(
+                modifier = Modifier.fillMaxWidth(),
+                tone = GenesysPanelTone.Raised,
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                onClick = { onOpenNotebook(page.id, null) }
+            ) {
+                GenesysText(
+                    text = "Quick page",
+                    style = GenesysTheme.typography.titleMedium
+                )
+                GenesysText(
+                    text = page.id,
+                    style = GenesysTheme.typography.bodyMedium,
+                    color = GenesysTheme.colors.outline
+                )
+            }
+        }
+
+        if (!uiState.isLoading && uiState.notebooks.isEmpty() && uiState.quickPages.isEmpty()) {
+            item(key = "empty") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(width = 1.dp, color = GenesysTheme.colors.outline)
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    GenesysText(
+                        text = "No notebooks yet",
+                        style = GenesysTheme.typography.titleMedium
+                    )
+                    GenesysText(
+                        text = "Create a notebook or quick page to open the editor with a real page route.",
+                        style = GenesysTheme.typography.bodyMedium,
+                        color = GenesysTheme.colors.outline
+                    )
+                }
+            }
+        }
+
+        item(key = "footer") {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -111,7 +261,7 @@ fun NotebookLibraryRoute(
                     style = GenesysTheme.typography.titleMedium
                 )
                 GenesysText(
-                    text = "Next tasks can move notebook models, repositories, and editor behavior into shared modules without changing the launcher again.",
+                    text = "The library now opens concrete page and book ids. Remaining notable drift is deeper in editor data flow, exports, and page management.",
                     style = GenesysTheme.typography.bodyMedium,
                     color = GenesysTheme.colors.outline
                 )
