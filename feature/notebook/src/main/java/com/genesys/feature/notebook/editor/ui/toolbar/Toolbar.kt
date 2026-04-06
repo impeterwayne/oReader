@@ -1,4 +1,4 @@
-﻿package com.genesys.feature.notebook.editor.ui.toolbar
+package com.genesys.feature.notebook.editor.ui.toolbar
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -34,10 +34,7 @@ import com.genesys.feature.notebook.editor.utils.Pen
 import com.genesys.feature.notebook.editor.utils.PenSetting
 import com.genesys.feature.notebook.ui.dialogs.BackgroundSelector
 import com.genesys.feature.notebook.ui.noRippleClickable
-import compose.icons.FeatherIcons
-import compose.icons.feathericons.Clipboard
-import compose.icons.feathericons.EyeOff
-import compose.icons.feathericons.RefreshCcw
+
 
 
 private fun isSelected(state: ToolbarUiState, penType: Pen): Boolean {
@@ -86,7 +83,7 @@ fun ToolbarContent(
                 Box(
                     Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
+                        .height(2.dp)
                         .background(Color.Black)
                 )
             }
@@ -98,7 +95,7 @@ fun ToolbarContent(
             ) {
                 ToolbarButton(
                     onSelect = { onAction(ToolbarAction.ToggleToolbar) },
-                    vectorIcon = FeatherIcons.EyeOff,
+                    iconId = R.drawable.visibility_off,
                     contentDescription = "close toolbar"
                 )
 
@@ -117,34 +114,7 @@ fun ToolbarContent(
                     ),
                     onChangeSetting = { onAction(ToolbarAction.ChangePenSetting(Pen.BALLPEN, it)) })
 
-                if (!GlobalAppSettings.current.monochromeMode) {
-                    listOf(
-                        Triple(Pen.REDBALLPEN, R.drawable.ballpenred, android.graphics.Color.RED),
-                        Triple(
-                            Pen.BLUEBALLPEN,
-                            R.drawable.ballpenblue,
-                            android.graphics.Color.BLUE
-                        ),
-                        Triple(
-                            Pen.GREENBALLPEN,
-                            R.drawable.ballpengreen,
-                            android.graphics.Color.GREEN
-                        )
-                    ).forEach { (pen, icon, defaultColor) ->
-                        PenToolbarButton(
-                            pen = pen,
-                            icon = icon,
-                            isSelected = isSelected(uiState, pen),
-                            onSelect = { onAction(ToolbarAction.ChangePen(pen)) },
-                            sizes = SIZES_STROKES_DEFAULT,
-                            penSetting = uiState.penSettings[pen.penName] ?: PenSetting(
-                                5f,
-                                defaultColor
-                            ),
-                            onChangeSetting = { onAction(ToolbarAction.ChangePenSetting(pen, it)) },
-                        )
-                    }
-                }
+
 
                 if (GlobalAppSettings.current.neoTools) {
                     PenToolbarButton(
@@ -224,7 +194,7 @@ fun ToolbarContent(
                     sizes = SIZES_MARKER_DEFAULT,
                     penSetting = uiState.penSettings[Pen.MARKER.penName] ?: PenSetting(
                         40f,
-                        android.graphics.Color.LTGRAY
+                        android.graphics.Color.BLACK
                     ),
                     onChangeSetting = { onAction(ToolbarAction.ChangePenSetting(Pen.MARKER, it)) }
                 )
@@ -262,7 +232,7 @@ fun ToolbarContent(
 
                 if (uiState.hasClipboard) {
                     ToolbarButton(
-                        vectorIcon = FeatherIcons.Clipboard,
+                        iconId = R.drawable.paste,
                         contentDescription = "paste",
                         onSelect = { onAction(ToolbarAction.Paste) }
                     )
@@ -271,7 +241,7 @@ fun ToolbarContent(
 
                 if (uiState.showResetView) {
                     ToolbarButton(
-                        vectorIcon = FeatherIcons.RefreshCcw,
+                        iconId = R.drawable.refresh,
                         contentDescription = "reset zoom and scroll",
                         onSelect = { onAction(ToolbarAction.ResetView) }
                     )
@@ -338,7 +308,7 @@ fun ToolbarContent(
             Box(
                 Modifier
                     .fillMaxWidth()
-                    .height(1.dp)
+                    .height(2.dp)
                     .background(Color.Black)
             )
         }
@@ -365,7 +335,7 @@ private fun VerticalDivider() {
     Box(
         Modifier
             .fillMaxHeight()
-            .width(0.5.dp)
+            .width(2.dp)
             .background(Color.Black)
     )
 }
@@ -375,9 +345,9 @@ fun presentlyUsedToolIcon(mode: Mode, pen: Pen): Int {
         Mode.Draw -> {
             when (pen) {
                 Pen.BALLPEN -> R.drawable.ballpen
-                Pen.REDBALLPEN -> R.drawable.ballpenred
-                Pen.BLUEBALLPEN -> R.drawable.ballpenblue
-                Pen.GREENBALLPEN -> R.drawable.ballpengreen
+                Pen.REDBALLPEN -> R.drawable.ballpen
+                Pen.BLUEBALLPEN -> R.drawable.ballpen
+                Pen.GREENBALLPEN -> R.drawable.ballpen
                 Pen.FOUNTAIN -> R.drawable.fountain
                 Pen.BRUSH -> R.drawable.brush
                 Pen.MARKER -> R.drawable.marker
@@ -401,7 +371,7 @@ fun ToolbarPreview() {
         pen = Pen.BALLPEN,
         penSettings = mapOf(
             Pen.BALLPEN.penName to PenSetting(5f, android.graphics.Color.BLACK),
-            Pen.MARKER.penName to PenSetting(40f, android.graphics.Color.LTGRAY)
+            Pen.MARKER.penName to PenSetting(40f, android.graphics.Color.BLACK)
         ),
         pageNumberInfo = "3/12",
         notebookId = "dummy_book"

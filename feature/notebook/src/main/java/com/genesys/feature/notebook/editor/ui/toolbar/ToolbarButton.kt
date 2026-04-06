@@ -1,4 +1,4 @@
-﻿package com.genesys.feature.notebook.editor.ui.toolbar
+package com.genesys.feature.notebook.editor.ui.toolbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -28,19 +28,15 @@ fun ToolbarButton(
     penColor: Color? = null,
     contentDescription: String = ""
 ) {
-    val bgColor = if (isSelected) (penColor ?: Color.Black) else (penColor ?: Color.Transparent)
-    val tint = when {
-        (penColor == Color.Black || penColor == Color.DarkGray) -> Color.White
-        isSelected -> Color.White
-        else -> Color.Black
-    }
+    val bgColor = if (isSelected) Color.Black else Color.Transparent
+    val tint = if (isSelected) Color.White else Color.Black
 
     Box(
         Modifier
             .then(modifier)
             .noRippleClickable { onSelect() }
             .background(
-                color = bgColor, shape = if (!isSelected) CircleShape else RectangleShape
+                color = bgColor, shape = RectangleShape
             )
             .padding(7.dp)
     ) {

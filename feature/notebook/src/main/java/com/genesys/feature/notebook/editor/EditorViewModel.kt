@@ -614,7 +614,7 @@ class EditorViewModel @Inject constructor(
             NotebookPen.GREENBALLPEN.penName to NotebookPenSetting(5f, Color.GREEN),
             NotebookPen.PENCIL.penName to NotebookPenSetting(5f, Color.BLACK),
             NotebookPen.BRUSH.penName to NotebookPenSetting(5f, Color.BLACK),
-            NotebookPen.MARKER.penName to NotebookPenSetting(40f, Color.LTGRAY),
+            NotebookPen.MARKER.penName to NotebookPenSetting(40f, Color.BLACK),
             NotebookPen.FOUNTAIN.penName to NotebookPenSetting(5f, Color.BLACK)
         )
     }

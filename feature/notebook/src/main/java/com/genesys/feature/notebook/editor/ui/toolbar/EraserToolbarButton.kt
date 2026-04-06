@@ -1,4 +1,4 @@
-﻿package com.genesys.feature.notebook.editor.ui.toolbar
+package com.genesys.feature.notebook.editor.ui.toolbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -70,13 +70,13 @@ fun EraserToolbarButton(
                     modifier = Modifier
                         .padding(bottom = (BUTTON_SIZE + 5).dp) // For toolbar is located at the button,
                         .background(Color.White)
-                        .border(1.dp, Color.Black)
+                        .border(2.dp, Color.Black)
                         .height(IntrinsicSize.Max)
                 ) {
                     Row(
                         Modifier
                             .height(IntrinsicSize.Max)
-                            .border(1.dp, Color.Black)
+                            .border(2.dp, Color.Black)
                     ) {
                         ToolbarButton(
                             iconId = R.drawable.eraser,
@@ -110,7 +110,7 @@ fun EraserToolbarButton(
                         Box(
                             modifier = Modifier
                                 .size(15.dp, 15.dp)
-                                .border(1.dp, Color.Black)
+                                .border(2.dp, Color.Black)
                                 .background(if (isChecked) Color.Black else Color.White)
                                 .clickable {
                                     isChecked = !isChecked

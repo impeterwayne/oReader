@@ -1,4 +1,4 @@
-﻿package com.genesys.feature.notebook.editor.ui.toolbar
+package com.genesys.feature.notebook.editor.ui.toolbar
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -69,7 +69,7 @@ private fun ToolbarMenuContent(
     Column(
         Modifier
             .padding(bottom = (BUTTON_SIZE + 5).dp)
-            .border(1.dp, Color.Black, RectangleShape)
+            .border(2.dp, Color.Black, RectangleShape)
             .background(Color.White)
             .width(IntrinsicSize.Max)
     ) {
@@ -158,8 +158,8 @@ private fun ColumnScope.DividerCentered() {
         Modifier
             .fillMaxWidth(1f / 2f)
             .align(Alignment.CenterHorizontally)
-            .height(0.5.dp)
-            .background(Color(0xFF777777))
+            .height(2.dp)
+            .background(Color.Black)
     )
 }
 

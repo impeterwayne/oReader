@@ -9,6 +9,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -210,10 +211,12 @@ fun BackgroundSelector(
                             onClick = { selectedBackgroundMode = modeName },
                             modifier = Modifier.padding(horizontal = 5.dp),
                             colors = ButtonDefaults.buttonColors(
-                                backgroundColor = if (selectedBackgroundMode == modeName) Color.Gray else Color.LightGray
-                            )
+                                backgroundColor = if (selectedBackgroundMode == modeName) Color.Black else Color.White,
+                                contentColor = if (selectedBackgroundMode == modeName) Color.White else Color.Black
+                            ),
+                            border = BorderStroke(1.dp, Color.Black)
                         ) {
-                            Text(modeName)
+                            Text(modeName, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -383,8 +386,8 @@ fun ShowNativeOption(
                 modifier = Modifier
                     .padding(6.dp)
                     .border(
-                        width = if (value == currentBackground) 3.dp else 1.dp,
-                        color = if (value == currentBackground) Color.Black else Color.LightGray,
+                        width = if (value == currentBackground) 4.dp else 1.dp,
+                        color = Color.Black,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clip(RoundedCornerShape(8.dp))
@@ -406,20 +409,23 @@ fun ShowNativeOption(
                         Modifier
                             .fillMaxWidth()
                             .aspectRatio(0.75f)
-                            .background(Color.LightGray),
+                            .background(Color.White)
+                            .border(1.dp, Color.Black, RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("...", color = Color.Gray)
+                        Text("...", color = Color.Black, fontWeight = FontWeight.Bold)
                     }
                 }
                 Text(
                     text = label,
                     textAlign = TextAlign.Center,
                     fontSize = 12.sp,
+                    fontWeight = if (value == currentBackground) FontWeight.Bold else FontWeight.Normal,
+                    color = if (value == currentBackground) Color.White else Color.Black,
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .background(Color.White.copy(alpha = 0.7f))
+                        .background(if (value == currentBackground) Color.Black else Color.White)
                         .padding(4.dp)
                 )
             }
@@ -463,8 +469,8 @@ fun ShowImageOption(
                 modifier = Modifier
                     .padding(6.dp)
                     .border(
-                        width = if (value == currentBackground) 3.dp else 1.dp,
-                        color = if (value == currentBackground) Color.Black else Color.LightGray,
+                        width = if (value == currentBackground) 4.dp else 1.dp,
+                        color = Color.Black,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clip(RoundedCornerShape(8.dp))
@@ -494,10 +500,11 @@ fun ShowImageOption(
                             Modifier
                                 .fillMaxWidth()
                                 .aspectRatio(1f)
-                                .background(Color.Gray),
+                                .background(Color.White)
+                                .border(1.dp, Color.Black, RoundedCornerShape(8.dp)),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(label, color = Color.White, fontWeight = FontWeight.Light)
+                            Text(label, color = Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                         }
                     }
                 } else {
@@ -505,10 +512,11 @@ fun ShowImageOption(
                         Modifier
                             .fillMaxWidth()
                             .aspectRatio(1f)
-                            .background(Color.Gray),
+                            .background(Color.White)
+                            .border(1.dp, Color.Black, RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(label, color = Color.White, fontWeight = FontWeight.Light)
+                        Text(label, color = Color.Black, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                     }
                 }
             }
@@ -545,8 +553,8 @@ fun ShowPdfOption(
                 modifier = Modifier
                     .padding(6.dp)
                     .border(
-                        width = if (value == currentBackground) 3.dp else 1.dp,
-                        color = if (value == currentBackground) Color.Black else Color.LightGray,
+                        width = if (value == currentBackground) 4.dp else 1.dp,
+                        color = Color.Black,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .clip(RoundedCornerShape(8.dp))
@@ -565,17 +573,18 @@ fun ShowPdfOption(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .background(Color.Gray)
+                        .background(Color.White)
+                        .border(1.dp, Color.Black, RoundedCornerShape(8.dp))
                         .padding(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.PictureAsPdf,
                         contentDescription = "PDF",
-                        tint = Color.White,
+                        tint = Color.Black,
                         modifier = Modifier.height(36.dp)
                     )
                     Spacer(Modifier.height(4.dp))
-                    Text(label, color = Color.White, fontSize = 12.sp)
+                    Text(label, color = Color.Black, fontSize = 12.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
                 }
             }
         }
@@ -670,9 +679,10 @@ fun PageNumberSelector(
                         },
                         modifier = Modifier.padding(4.dp),
                         colors = ButtonDefaults.buttonColors(
-                            backgroundColor = if (isSelected) Color.Gray else Color.White,
-                            contentColor = Color.Black
-                        )
+                            backgroundColor = if (isSelected) Color.Black else Color.White,
+                            contentColor = if (isSelected) Color.White else Color.Black
+                        ),
+                        border = BorderStroke(1.dp, Color.Black)
                     ) {
                         val name = if (isNotebookBgSelector)
                             stringResource(R.string.notebook_observe_pdf)

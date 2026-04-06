@@ -1,4 +1,4 @@
-﻿package com.genesys.feature.notebook.editor.ui.toolbar
+package com.genesys.feature.notebook.editor.ui.toolbar
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -56,7 +56,7 @@ fun StrokeMenu(
     val columnModifier =
         if (GlobalAppSettings.current.continuousStrokeSlider) Modifier
             .background(Color.White)
-            .border(1.dp, Color.Black)
+            .border(2.dp, Color.Black)
         else Modifier
     Popup(
         offset = IntOffset(0, convertDpToPixel(43.dp, context).toInt()),
@@ -72,13 +72,7 @@ fun StrokeMenu(
                 .padding(bottom = (BUTTON_SIZE + 5).dp) // For toolbar is located at the button,
         ) {
 
-            val listOfColors = if (GlobalAppSettings.current.monochromeMode) listOf(
-                Color.Black,
-                Color.DarkGray,
-                Color.Gray,
-                Color.LightGray
-            )
-            else colorOptions
+            val listOfColors = listOf(Color.Black, Color.White)
 
             val widthOfPicker = (35 * listOfColors.size.coerceAtLeast(5))
             val heightOfPicker = 40
@@ -180,7 +174,7 @@ private fun ColorPicker(
     } else {
         modifier
             .background(Color.White)
-            .border(1.dp, Color.Black)
+            .border(2.dp, Color.Black)
             .height(IntrinsicSize.Max)
     }
 
@@ -228,7 +222,7 @@ private fun ThicknessPicker(
     Row(
         modifier = modifier
             .background(Color.White)
-            .border(1.dp, Color.Black),
+            .border(2.dp, Color.Black),
         horizontalArrangement = Arrangement.Center
     ) {
         sizeOptions.forEach {

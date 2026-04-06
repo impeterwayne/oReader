@@ -1,4 +1,4 @@
-﻿package com.genesys.feature.notebook.editor.ui.toolbar
+package com.genesys.feature.notebook.editor.ui.toolbar
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.Composable
@@ -50,17 +50,7 @@ fun PenToolbarButton(
                 onChange = { onChangeSetting(it) },
                 onClose = { isStrokeMenuOpen = false },
                 sizeOptions = sizes,
-                colorOptions = listOf(
-                    Color.Red,
-                    Color.Green,
-                    Color.Blue,
-                    Color.Cyan,
-                    Color.Magenta,
-                    Color.Yellow,
-                    Color.Gray,
-                    Color.DarkGray,
-                    Color.Black,
-                )
+                colorOptions = listOf(Color.Black, Color.White)
             )
         }
     }
