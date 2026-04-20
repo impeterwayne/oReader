@@ -47,7 +47,7 @@ class MainActivity : NativeActivity(), LuaInterface,
 
     // Device cutout - only used on API 28+
     private var topInsetHeight: Int = 0
-
+    
     // Fullscreen - only used on API levels 16-18
     private var fullscreen: Boolean = true
 
@@ -747,9 +747,7 @@ class MainActivity : NativeActivity(), LuaInterface,
     }
 
     override fun startTestActivity() {
-        val intent = Intent(this, TestActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION)
-        startActivity(intent)
+        // TestActivity was removed
     }
 
     /*---------------------------------------------------------------
@@ -758,13 +756,19 @@ class MainActivity : NativeActivity(), LuaInterface,
 
     private fun drawSplashScreen(holder: SurfaceHolder) {
         if (splashScreen) {
-            /* draw splash screen to surface */
+            /* draw loading text to surface */
             holder.lockCanvas()?.let { canvas ->
                 try {
-                    ContextCompat.getDrawable(this, R.drawable.splash_icon)?.let { splashDrawable ->
-                        splashDrawable.setBounds(0, 0, canvas.width, canvas.height)
-                        splashDrawable.draw(canvas)
+                    canvas.drawColor(android.graphics.Color.WHITE)
+                    val paint = android.graphics.Paint().apply {
+                        color = android.graphics.Color.BLACK
+                        textSize = 60f
+                        isAntiAlias = true
+                        textAlign = android.graphics.Paint.Align.CENTER
                     }
+                    val xPos = (canvas.width / 2).toFloat()
+                    val yPos = (canvas.height / 2 - (paint.descent() + paint.ascent()) / 2)
+                    canvas.drawText("Loading...", xPos, yPos, paint)
                 } catch (e: Exception) {
                     Log.w(tag, "Failed to draw splash screen:\n$e")
                 }

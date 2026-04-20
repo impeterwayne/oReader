@@ -1,6 +1,0 @@
-[submodule "vendor/koreader"]
-	path = vendor/koreader
-	url = https://github.com/koreader/koreader.git
-[submodule "vendor/koreader-base"]
-	path = vendor/koreader-base
-	url = https://github.com/koreader/koreader-base.git

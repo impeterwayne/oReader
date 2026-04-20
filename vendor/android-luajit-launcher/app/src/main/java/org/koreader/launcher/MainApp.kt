@@ -48,14 +48,6 @@ class MainApp : Application() {
         // crash report
         fun crashReport(context: Context, reason: String? = null) {
             writeLogToFile(crash_report_path, true)
-            val reportIntent = Intent(context, CrashReportActivity::class.java)
-            reportIntent.putExtra("title", "$NAME crashed")
-            reportIntent.putExtra("reason", reason ?: "")
-            reportIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                Intent.FLAG_ACTIVITY_TASK_ON_HOME or
-                Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS or
-                Intent.FLAG_ACTIVITY_NO_HISTORY
-            context.startActivity(reportIntent)
         }
 
         fun isAtLeastApi(version: Int, runtimeOnly: Boolean = false): Boolean {
