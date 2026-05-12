@@ -69,7 +69,6 @@ dependencies {
     implementation(project(":core:designsystem"))
 
     // Feature modules
-    implementation(project(":feature:template"))
     implementation(project(":feature:notebook"))
     implementation(project(":feature:koreader"))
 

@@ -42,6 +42,5 @@ include(":core:designsystem")
 include(":core:common")
 
 // Feature modules
-include(":feature:template")
 include(":feature:notebook")
 include(":feature:koreader")
