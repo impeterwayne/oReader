@@ -1,5 +1,7 @@
 package com.genesys.feature.notebook.editor
 
+import com.genesys.feature.notebook.navigation.NotebookEditor
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,8 +23,7 @@ import com.genesys.feature.notebook.ui.SnackState
 
 @Composable
 fun NotebookEditorRoute(
-    pageId: String?,
-    bookId: String?,
+    route: NotebookEditor,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     goToPages: (String) -> Unit = {},
@@ -31,7 +32,7 @@ fun NotebookEditorRoute(
     val snackState = remember { SnackState() }
 
     CompositionLocalProvider(LocalSnackContext provides snackState) {
-        if (pageId == null) {
+        if (route.pageId.isBlank()) {
             NotebookEditorStatus(
                 modifier = modifier,
                 title = "Notebook unavailable",
@@ -41,8 +42,8 @@ fun NotebookEditorRoute(
             )
         } else {
             EditorView(
-                initialPageId = pageId,
-                bookId = bookId,
+                initialPageId = route.pageId,
+                bookId = route.bookId,
                 isQuickNavOpen = false,
                 onPageChange = {},
                 goToLibrary = { onBack() },

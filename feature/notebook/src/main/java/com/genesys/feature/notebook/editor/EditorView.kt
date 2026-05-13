@@ -37,25 +37,6 @@ import kotlinx.coroutines.flow.filterNotNull
 
 private const val TAG = "EditorView"
 
-object EditorDestination : NavigationDestination {
-    override val route = "editor"
-
-    const val PAGE_ID_ARG = "pageId"
-    const val BOOK_ID_ARG = "bookId"
-
-    // Unified route: editor/{pageId}?bookId={bookId}
-    val routeWithArgs = "$route/{$PAGE_ID_ARG}?$BOOK_ID_ARG={$BOOK_ID_ARG}"
-
-    /**
-     * Helper to create the path. If bookId is null, it just won't be appended.
-     */
-    fun createRoute(pageId: String, bookId: String? = null): String {
-        return "$route/$pageId" + if (bookId != null) "?$BOOK_ID_ARG=$bookId" else ""
-    }
-}
-
-
-
 @Composable
 fun EditorView(
     initialPageId: String,
