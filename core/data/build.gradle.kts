@@ -22,6 +22,9 @@ dependencies {
     // MMKV
     implementation(deps.mmkv)
 
+    // DocumentFile
+    implementation("androidx.documentfile:documentfile:1.0.1")
+
     // Coroutines
     implementation(deps.kotlinxCoroutinesCore)
     implementation(deps.kotlinxCoroutinesAndroid)

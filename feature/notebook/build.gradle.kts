@@ -3,6 +3,7 @@ import org.gradle.kotlin.dsl.the
 
 plugins {
     id("codebase.android.feature")
+    alias(libs.plugins.kotlinSerialization)
 }
 
 val deps = the<LibrariesForLibs>()

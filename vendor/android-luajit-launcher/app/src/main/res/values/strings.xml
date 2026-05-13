@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- translate -->
-    <string name="error_no_permissions">Insufficient permissions</string>
     <string name="no_crash_attached">No crash report attached</string>
-    <string name="permission_manage_storage">Please allow the app to manage all files.</string>
     <string name="test_button_epd">test e-ink</string>
     <string name="test_button_lights">test lights</string>
     <string name="test_device_id">Device info</string>

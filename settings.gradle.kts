@@ -45,3 +45,4 @@ include(":core:navigation")
 // Feature modules
 include(":feature:notebook")
 include(":feature:koreader")
+include(":feature:library")

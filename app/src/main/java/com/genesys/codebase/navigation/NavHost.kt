@@ -13,10 +13,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.rememberNavBackStack
-import com.genesys.codebase.reader.ReaderScreenRoute
 import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.core.navigation.AppNavigator
 import com.genesys.core.navigation.AppNavigatorImpl
+import com.genesys.feature.library.navigation.LibraryGraph
+import com.genesys.feature.library.navigation.LibrarySettings
 import com.genesys.feature.notebook.navigation.NotebookGraph
 import com.genesys.feature.notebook.navigation.NotebookPages
 
@@ -99,7 +100,14 @@ fun NavHost(
         Box(modifier = Modifier.weight(1f)) {
             when (appState.currentDestination) {
                 TopLevelDestination.Reader -> {
-                    ReaderScreenRoute(modifier = Modifier.fillMaxSize())
+                    LibraryGraph(
+                        currentRoute = appState.activeBackStack.lastOrNull(),
+                        onOpenSettings = {
+                            appState.activeNavigator.navigate(LibrarySettings)
+                        },
+                        onBack = appState::handleBack,
+                        modifier = Modifier.fillMaxSize()
+                    )
                 }
 
                 TopLevelDestination.Notebook -> {

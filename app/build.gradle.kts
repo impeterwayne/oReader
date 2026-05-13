@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.kotlinAndroid)
     alias(libs.plugins.kotlinCompose)
+    alias(libs.plugins.kotlinSerialization)
     alias(libs.plugins.hiltAndroid)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlinParcelize)
@@ -72,6 +73,7 @@ dependencies {
     // Feature modules
     implementation(project(":feature:notebook"))
     implementation(project(":feature:koreader"))
+    implementation(project(":feature:library"))
 
     // AndroidX
     implementation(deps.androidxCoreKtx)

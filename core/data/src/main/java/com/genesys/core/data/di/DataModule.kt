@@ -6,16 +6,16 @@ import com.genesys.core.data.repository.notebook.NotebookKeyValueRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookPageRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookStrokeRepositoryImpl
-import com.genesys.core.data.repository.reader.ReaderSettingsManager
-import com.genesys.core.data.repository.template.TemplateRepositoryImpl
+import com.genesys.core.data.repository.reader.SettingsManager
 import com.genesys.core.domain.repository.notebook.NotebookFolderRepository
 import com.genesys.core.domain.repository.notebook.NotebookImageRepository
 import com.genesys.core.domain.repository.notebook.NotebookKeyValueRepository
 import com.genesys.core.domain.repository.notebook.NotebookPageRepository
 import com.genesys.core.domain.repository.notebook.NotebookRepository
 import com.genesys.core.domain.repository.notebook.NotebookStrokeRepository
-import com.genesys.core.domain.repository.reader.ReaderSettingsRepository
-import com.genesys.core.domain.repository.template.TemplateRepository
+import com.genesys.core.domain.repository.reader.SettingsRepository
+import com.genesys.core.domain.repository.library.LibraryRepository
+import com.genesys.core.data.repository.library.LibraryRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -24,11 +24,6 @@ import dagger.hilt.components.SingletonComponent
 @Module
 @InstallIn(SingletonComponent::class)
 internal interface DataModule {
-    @Binds
-    fun bindTemplateRepository(
-        templateRepositoryImpl: TemplateRepositoryImpl
-    ): TemplateRepository
-
     @Binds
     fun bindNotebookRepository(
         impl: NotebookRepositoryImpl
@@ -61,6 +56,11 @@ internal interface DataModule {
 
     @Binds
     fun bindReaderSettingsRepository(
-        impl: ReaderSettingsManager
-    ): ReaderSettingsRepository
+        impl: SettingsManager
+    ): SettingsRepository
+
+    @Binds
+    fun bindReaderLibraryRepository(
+        impl: LibraryRepositoryImpl
+    ): LibraryRepository
 }

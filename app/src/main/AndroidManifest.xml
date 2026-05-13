@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Codebase">
         <activity
-            android:name=".MainActivity"
+            android:name="com.genesys.codebase.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

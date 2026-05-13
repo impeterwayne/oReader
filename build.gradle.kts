@@ -8,3 +8,15 @@ plugins {
     alias(libs.plugins.hiltAndroid) apply false
     alias(libs.plugins.ksp) apply false
 }
+
+// Ensure implicit intermediate projects have a clean task to satisfy Android Studio
+project(":feature") {
+    tasks.register("clean", Delete::class) {
+        delete(layout.buildDirectory)
+    }
+}
+project(":core") {
+    tasks.register("clean", Delete::class) {
+        delete(layout.buildDirectory)
+    }
+}

@@ -8,6 +8,7 @@ import android.provider.OpenableColumns
 import com.genesys.feature.koreader.runtime.KoreaderDirectories
 import timber.log.Timber
 import java.io.File
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -21,6 +22,10 @@ import javax.inject.Singleton
  */
 @Singleton
 class KoreaderStorageBridge @Inject constructor() {
+
+    companion object {
+        private val INVALID_FILE_NAME_CHARS = Regex("""[\\/:*?"<>|]""")
+    }
 
     /**
      * Result of resolving a document for KOReader.
@@ -81,22 +86,16 @@ class KoreaderStorageBridge @Inject constructor() {
         }
     }
 
-    /**
-     * Stage a content:// URI by copying its contents to app-private storage.
-     *
-     * Uses a deterministic filename based on the URI to avoid redundant copies.
-     */
     private fun stageContentUri(context: Context, uri: Uri): ResolvedDocument {
         val dirs = KoreaderDirectories(context)
         dirs.ensureDirectories()
 
-        val displayName = getDisplayName(context, uri)
-            ?: "document_${uri.hashCode()}"
-
-        val stagedFile = File(dirs.stagingDir, displayName)
+        val stagedFile = createStagedFile(context, uri)
+        if (stagedFile.exists() && stagedFile.length() > 0L) {
+            return ResolvedDocument.Available(stagedFile.absolutePath, isStaged = true)
+        }
 
         return try {
-            // Copy content to staging directory
             context.contentResolver.openInputStream(uri)?.use { input ->
                 stagedFile.outputStream().use { output ->
                     input.copyTo(output)
@@ -106,8 +105,42 @@ class KoreaderStorageBridge @Inject constructor() {
             Timber.i("Staged document: $uri -> ${stagedFile.absolutePath}")
             ResolvedDocument.Available(stagedFile.absolutePath, isStaged = true)
         } catch (e: Exception) {
+            stagedFile.delete()
             Timber.e(e, "Failed to stage content URI: $uri")
             ResolvedDocument.Unavailable("Failed to stage document: ${e.message}")
+        }
+    }
+
+    fun previewStagedFilePath(context: Context, uri: Uri): String {
+        return createStagedFile(context, uri).absolutePath
+    }
+
+    private fun createStagedFile(context: Context, uri: Uri): File {
+        val dirs = KoreaderDirectories(context)
+        dirs.ensureDirectories()
+
+        val displayName = sanitizeFileName(
+            getDisplayName(context, uri)?.takeIf { it.isNotBlank() }
+                ?: "document_${uri.hashCode()}"
+        )
+        val nameWithoutExtension = displayName.substringBeforeLast('.', displayName)
+        val extension = displayName.substringAfterLast('.', "")
+        val uriSuffix = uri.toString().hashCode().toUInt().toString(16)
+        val uniqueName = if (extension.isNotBlank()) {
+            "$nameWithoutExtension-$uriSuffix.$extension"
+        } else {
+            "$nameWithoutExtension-$uriSuffix"
+        }
+
+        return File(dirs.stagingDir, uniqueName)
+    }
+
+    private fun sanitizeFileName(fileName: String): String {
+        val sanitized = fileName.replace(INVALID_FILE_NAME_CHARS, "_").trim()
+        return if (sanitized.isBlank()) {
+            "document_${UUID.randomUUID()}"
+        } else {
+            sanitized
         }
     }
 

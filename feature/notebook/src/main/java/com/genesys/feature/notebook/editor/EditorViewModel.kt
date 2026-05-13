@@ -8,8 +8,7 @@ import com.genesys.feature.notebook.R
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.genesys.core.domain.repository.notebook.NotebookPageRepository
-import com.genesys.core.domain.repository.notebook.NotebookRepository
+import com.genesys.core.domain.usecase.notebook.NotebookUseCases
 import com.genesys.core.model.notebook.NotebookPen
 import com.genesys.core.model.notebook.NotebookPenSetting
 import com.genesys.feature.notebook.data.PageDataManager
@@ -156,8 +155,7 @@ sealed class EditorUiEvent {
 @HiltViewModel
 class EditorViewModel @Inject constructor(
     @param:ApplicationContext private val context: Context,
-    private val pageRepository: NotebookPageRepository,
-    private val notebookRepository: NotebookRepository,
+    private val notebookUseCases: NotebookUseCases,
     var editorSettingCacheManager: EditorSettingCacheManager,
     val pageDataManager: PageDataManager
 ) : ViewModel() {
@@ -352,18 +350,18 @@ class EditorViewModel @Inject constructor(
 
     private fun handleBackgroundChange(type: String, path: String?) {
         viewModelScope.launch(Dispatchers.IO) {
-            val page = pageRepository.getById(currentPageId) ?: return@launch
+            val page = notebookUseCases.getNotebookPageByIdUseCase(currentPageId) ?: return@launch
             val updatedPage = if (path == null) {
                 page.copy(backgroundType = type)
             } else {
                 page.copy(background = path, backgroundType = type)
             }
-            pageRepository.update(updatedPage)
+            notebookUseCases.updateNotebookPageUseCase(updatedPage)
 
             val bgPageNum = when (val bgTypeObj = BackgroundType.fromKey(type)) {
                 is BackgroundType.Pdf -> bgTypeObj.page
                 is BackgroundType.AutoPdf -> {
-                    bookId?.let { notebookRepository.getPageIndex(it, currentPageId) } ?: 0
+                    bookId?.let { notebookUseCases.getNotebookPageIndexUseCase(it, currentPageId) } ?: 0
                 }
                 else -> 0
             }
@@ -426,7 +424,7 @@ class EditorViewModel @Inject constructor(
         Log.v(TAG, "loadToolbarState: bookId=$bookId, pageId=$pageId")
         this.bookId = bookId
 
-        val page = pageRepository.getById(pageId)
+        val page = notebookUseCases.getNotebookPageByIdUseCase(pageId)
         if (page == null) {
             logAndShowError(
                 "EditorViewModel",
@@ -435,16 +433,16 @@ class EditorViewModel @Inject constructor(
             fixNotebook(bookId, pageId)
             return
         }
-        val book = bookId?.let { notebookRepository.getById(it) }
+        val book = bookId?.let { notebookUseCases.getNotebookByIdUseCase(it) }
 
-        val pageIndex = bookId?.let { notebookRepository.getPageIndex(it, pageId) } ?: 0
+        val pageIndex = bookId?.let { notebookUseCases.getNotebookPageIndexUseCase(it, pageId) } ?: 0
         val totalPages = book?.pageIds?.size ?: 1
 
         val backgroundTypeObj = BackgroundType.fromKey(page.backgroundType)
         val bgPageNumber = when (backgroundTypeObj) {
             is BackgroundType.Pdf -> backgroundTypeObj.page
             is BackgroundType.AutoPdf -> {
-                bookId?.let { notebookRepository.getPageIndex(it, pageId) } ?: 0
+                bookId?.let { notebookUseCases.getNotebookPageIndexUseCase(it, pageId) } ?: 0
             }
             else -> 0
         }
@@ -499,16 +497,16 @@ class EditorViewModel @Inject constructor(
 
     private suspend fun getNextPageId(): String? {
         if (bookId == null) return null
-        val book = notebookRepository.getById(bookId!!) ?: return null
-        val index = notebookRepository.getPageIndex(bookId!!, currentPageId) ?: return null
+        val book = notebookUseCases.getNotebookByIdUseCase(bookId!!) ?: return null
+        val index = notebookUseCases.getNotebookPageIndexUseCase(bookId!!, currentPageId) ?: return null
         return if (index < book.pageIds.size - 1) book.pageIds[index + 1] else null
     }
 
     private suspend fun getPreviousPageId(): String? {
         if (bookId == null) return null
-        val index = notebookRepository.getPageIndex(bookId!!, currentPageId) ?: return null
+        val index = notebookUseCases.getNotebookPageIndexUseCase(bookId!!, currentPageId) ?: return null
         return if (index > 0) {
-            val book = notebookRepository.getById(bookId!!) ?: return null
+            val book = notebookUseCases.getNotebookByIdUseCase(bookId!!) ?: return null
             book.pageIds[index - 1]
         } else null
     }
@@ -534,8 +532,8 @@ class EditorViewModel @Inject constructor(
                         backgroundType = _toolbarState.value.backgroundType,
                         background = _toolbarState.value.backgroundPath
                     )
-                    pageRepository.create(newPage)
-                    notebookRepository.addPage(id, newPage.id)
+                    notebookUseCases.createNotebookPageUseCase(newPage)
+                    notebookUseCases.addNotebookPageUseCase(id, newPage.id)
                     changePage(newPage.id)
                 }
             }
@@ -561,16 +559,16 @@ class EditorViewModel @Inject constructor(
     private suspend fun updateOpenedPage(newPageId: String) {
         Log.v(TAG, "updateOpenedPage: $newPageId")
         if (bookId != null) {
-            notebookRepository.setOpenPageId(bookId!!, newPageId)
+            notebookUseCases.setNotebookOpenPageIdUseCase(bookId!!, newPageId)
         }
         if (newPageId != currentPageId) {
             Log.d(TAG, "Page changed")
 
             // Refresh page number info and background from repository
-            val book = bookId?.let { notebookRepository.getById(it) }
-            val pageIndex = bookId?.let { notebookRepository.getPageIndex(it, newPageId) } ?: 0
+            val book = bookId?.let { notebookUseCases.getNotebookByIdUseCase(it) }
+            val pageIndex = bookId?.let { notebookUseCases.getNotebookPageIndexUseCase(it, newPageId) } ?: 0
             val totalPages = book?.pageIds?.size ?: 1
-            val page = pageRepository.getById(newPageId)
+            val page = notebookUseCases.getNotebookPageByIdUseCase(newPageId)
 
             val backgroundType = page?.backgroundType ?: _toolbarState.value.backgroundType
             val backgroundPath = page?.background ?: _toolbarState.value.backgroundPath

@@ -13,8 +13,9 @@ import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.codebase.navigation.NavHost
-import com.genesys.codebase.reader.ReaderLibraryEvents
-import com.genesys.codebase.reader.ReaderLibraryRepository
+import com.genesys.feature.library.LibraryEvents
+import com.genesys.core.domain.repository.library.LibraryRepository
+import com.genesys.core.model.library.LibraryImportResult
 import com.genesys.core.data.repository.notebook.NotebookSettingsManager
 import com.genesys.feature.notebook.editor.canvas.CanvasEventBus
 import com.genesys.feature.notebook.data.EditorSettingCacheManager
@@ -40,10 +41,10 @@ class MainActivity : ComponentActivity() {
     lateinit var storageBridge: KoreaderStorageBridge
 
     @Inject
-    lateinit var readerLibraryRepository: ReaderLibraryRepository
+    lateinit var LibraryRepository: LibraryRepository
 
     @Inject
-    lateinit var readerLibraryEvents: ReaderLibraryEvents
+    lateinit var LibraryEvents: LibraryEvents
 
     @Inject
     lateinit var pageDataManager: PageDataManager
@@ -139,7 +140,7 @@ class MainActivity : ComponentActivity() {
                 val message = withContext(Dispatchers.IO) {
                     when (val resolved = storageBridge.resolveIntent(this@MainActivity, intent)) {
                         is KoreaderStorageBridge.ResolvedDocument.Available -> {
-                            readerLibraryRepository.importFile(resolved.filePath)
+                            LibraryRepository.importFile(resolved.filePath)
                                 .also {
                                     if (resolved.isStaged) {
                                         File(resolved.filePath).delete()
@@ -156,14 +157,14 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (message != null) {
-                    readerLibraryEvents.notifyChanged()
+                    LibraryEvents.notifyChanged()
                     Toast.makeText(this@MainActivity, message, Toast.LENGTH_SHORT).show()
                 }
             }
         }
     }
 
-    private fun ReaderLibraryRepository.ImportResult.toMessage(): String? {
+    private fun LibraryImportResult.toMessage(): String? {
         val parts = buildList {
             if (importedCount > 0) {
                 add(
