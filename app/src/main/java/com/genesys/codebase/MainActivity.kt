@@ -12,7 +12,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.lifecycleScope
 import com.genesys.core.designsystem.theme.GenesysTheme
-import com.genesys.codebase.navigation.AppShell
+import com.genesys.codebase.navigation.NavHost
 import com.genesys.codebase.reader.ReaderLibraryEvents
 import com.genesys.codebase.reader.ReaderLibraryRepository
 import com.genesys.core.data.repository.notebook.NotebookSettingsManager
@@ -86,7 +86,7 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             GenesysTheme {
-                AppShell()
+                NavHost()
             }
         }
     }
@@ -139,18 +139,15 @@ class MainActivity : ComponentActivity() {
                 val message = withContext(Dispatchers.IO) {
                     when (val resolved = storageBridge.resolveIntent(this@MainActivity, intent)) {
                         is KoreaderStorageBridge.ResolvedDocument.Available -> {
-                            if (resolved.isStaged || !readerLibraryRepository.hasSharedStorageAccess()) {
-                                readerLibraryRepository.importFile(resolved.filePath)
-                                    .also {
-                                        if (resolved.isStaged) {
-                                            File(resolved.filePath).delete()
-                                        }
+                            readerLibraryRepository.importFile(resolved.filePath)
+                                .also {
+                                    if (resolved.isStaged) {
+                                        File(resolved.filePath).delete()
                                     }
-                                    .toMessage()
-                            } else {
-                                "Book available in your library"
-                            }
+                                }
+                                .toMessage()
                         }
+
                         is KoreaderStorageBridge.ResolvedDocument.Unavailable -> {
                             Timber.w("Could not resolve document: ${resolved.reason}")
                             null

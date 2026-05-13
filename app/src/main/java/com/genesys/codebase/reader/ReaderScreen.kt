@@ -1,10 +1,12 @@
 package com.genesys.codebase.reader
 
-import android.app.Activity
-import android.content.Context
+import android.net.Uri
+import android.provider.DocumentsContract
 import android.text.format.DateUtils
 import android.text.format.Formatter
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,11 +20,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.genesys.core.designsystem.component.GenesysChip
+import com.genesys.core.designsystem.component.GenesysDivider
 import com.genesys.core.designsystem.component.GenesysPanel
 import com.genesys.core.designsystem.component.GenesysPanelTone
 import com.genesys.core.designsystem.component.GenesysPrimaryButton
@@ -30,8 +34,7 @@ import com.genesys.core.designsystem.component.GenesysSecondaryButton
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.feature.koreader.host.KoreaderActivity
-import com.hjq.permissions.dsl.XXPermissionsExt
-import com.hjq.permissions.permission.special.ManageExternalStoragePermission
+import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
 
 @Composable
@@ -40,37 +43,61 @@ fun ReaderScreenRoute(
     viewModel: ReaderLibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
-    val activity = context.findActivity()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val openTreeLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { treeUri ->
+        treeUri?.let { uri ->
+            viewModel.onAction(ReaderAction.AddLibraryFolder(uri))
+        }
+    }
 
-    LaunchedEffect(uiState.message) {
-        val message = uiState.message ?: return@LaunchedEffect
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-        viewModel.consumeMessage()
+    LaunchedEffect(viewModel) {
+        viewModel.sideEffects.collectLatest { sideEffect ->
+            when (sideEffect) {
+                is ReaderSideEffect.OpenBook -> {
+                    context.startActivity(
+                        KoreaderActivity.LaunchMode.toIntent(
+                            context,
+                            KoreaderActivity.LaunchMode.OpenDocument(sideEffect.filePath)
+                        )
+                    )
+                }
+                is ReaderSideEffect.ShowMessage -> {
+                    Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
     }
 
     ReaderScreen(
         state = uiState,
-        onRequestLibraryAccess = {
-            activity?.let { requestReaderLibraryAccess(it, viewModel::refreshBooks) }
+        onAddLibraryFolder = { openTreeLauncher.launch(null) },
+        onRemoveLibraryFolder = { folderId ->
+            viewModel.onAction(ReaderAction.RemoveLibraryFolder(folderId))
         },
-        onRefresh = viewModel::refreshBooks,
+        onRemoveInvalidFolders = {
+            viewModel.onAction(ReaderAction.RemoveInvalidFolders)
+        },
+        onRefresh = {
+            viewModel.onAction(ReaderAction.RefreshLibrary)
+        },
         onOpenBook = { book ->
-            val intent = KoreaderActivity.LaunchMode.toIntent(
-                context,
-                KoreaderActivity.LaunchMode.OpenDocument(book.filePath)
-            )
-            context.startActivity(intent)
+            viewModel.onAction(ReaderAction.OpenBook(book))
         },
-        onRemoveBook = viewModel::removeBook,
+        onRemoveBook = { bookId ->
+            viewModel.onAction(ReaderAction.RemoveBook(bookId))
+        },
         modifier = modifier
     )
 }
 
 @Composable
 private fun ReaderScreen(
-    state: ReaderLibraryUiState,
-    onRequestLibraryAccess: () -> Unit,
+    state: ReaderUiState,
+    onAddLibraryFolder: () -> Unit,
+    onRemoveLibraryFolder: (String) -> Unit,
+    onRemoveInvalidFolders: () -> Unit,
     onRefresh: () -> Unit,
     onOpenBook: (ReaderBook) -> Unit,
     onRemoveBook: (String) -> Unit,
@@ -80,13 +107,16 @@ private fun ReaderScreen(
         modifier = modifier
             .fillMaxSize()
             .background(GenesysTheme.colors.surfaceDim)
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+            .padding(
+                horizontal = GenesysTheme.spacing.md + GenesysTheme.spacing.xxs,
+                vertical = GenesysTheme.spacing.lg
+            ),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.md)
     ) {
         item {
             Column(
                 modifier = Modifier.statusBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
             ) {
                 GenesysText(
                     text = "Reader Library",
@@ -99,7 +129,9 @@ private fun ReaderScreen(
         item {
             ReaderLibrarySummaryPanel(
                 state = state,
-                onRequestLibraryAccess = onRequestLibraryAccess,
+                onAddLibraryFolder = onAddLibraryFolder,
+                onRemoveLibraryFolder = onRemoveLibraryFolder,
+                onRemoveInvalidFolders = onRemoveInvalidFolders,
                 onRefresh = onRefresh
             )
         }
@@ -109,29 +141,26 @@ private fun ReaderScreen(
                 item {
                     ReaderStatusPanel(
                         title = "Loading library",
-                        body = "Scanning device books and reading KOReader progress."
+                        body = "Scanning selected folders and reading KOReader progress."
                     )
                 }
             }
-
-            state.books.isEmpty() && state.storageAccessRequirement != ReaderStorageAccessRequirement.None -> {
+            state.books.isEmpty() && state.selectedFolders.isEmpty() -> {
                 item {
                     ReaderStatusPanel(
-                        title = "Library access required",
-                        body = "Allow library access so oReader can scan supported books on device storage instead of dropping you into KOReader's file manager."
+                        title = "No folders selected",
+                        body = "Add one or more folders to scan your books with folder-based access."
                     )
                 }
             }
-
             state.books.isEmpty() -> {
                 item {
                     ReaderStatusPanel(
-                        title = "Library is empty",
-                        body = "No supported books were found yet. Add books to device storage or share a book into oReader to keep a managed copy here."
+                        title = "No books found",
+                        body = "Selected folders are ready, but no supported books were found yet. Managed copies still appear here when imported."
                     )
                 }
             }
-
             else -> {
                 items(
                     items = state.books,
@@ -150,45 +179,136 @@ private fun ReaderScreen(
 
 @Composable
 private fun ReaderLibrarySummaryPanel(
-    state: ReaderLibraryUiState,
-    onRequestLibraryAccess: () -> Unit,
+    state: ReaderUiState,
+    onAddLibraryFolder: () -> Unit,
+    onRemoveLibraryFolder: (String) -> Unit,
+    onRemoveInvalidFolders: () -> Unit,
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val validFolderCount = state.selectedFolders.count { it.isValid }
+
     GenesysPanel(
         modifier = modifier.fillMaxWidth(),
         tone = GenesysPanelTone.Frame,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
     ) {
         GenesysText(
             text = if (state.books.isEmpty()) {
-                "No books available yet"
+                "Library waiting for books"
             } else {
                 "${state.books.size} books in your library"
             },
             style = GenesysTheme.typography.titleMedium
         )
         GenesysText(
-            text = if (state.storageAccessRequirement == ReaderStorageAccessRequirement.None) {
-                "oReader scans supported books directly from device storage and keeps shared or protected files as managed copies in-app."
-            } else {
-                "Grant library access so oReader can manage books in-app first instead of sending you to KOReader's file manager."
+            text = buildString {
+                append(validFolderCount)
+                append(" active folder")
+                if (validFolderCount != 1) {
+                    append('s')
+                }
+                append(" selected for scanning")
+                if (state.invalidFolders.isNotEmpty()) {
+                    append(". ")
+                    append(state.invalidFolders.size)
+                    append(" unavailable folder")
+                    if (state.invalidFolders.size != 1) {
+                        append('s')
+                    }
+                    append(" can be removed.")
+                }
             },
             style = GenesysTheme.typography.bodyMedium,
             color = GenesysTheme.colors.outline
         )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            if (state.storageAccessRequirement != ReaderStorageAccessRequirement.None) {
-                GenesysPrimaryButton(
-                    text = "Allow library access",
-                    onClick = onRequestLibraryAccess
+
+        if (state.selectedFolders.isEmpty()) {
+            ReaderStatusPanel(
+                title = "No folders yet",
+                body = "Add folder to build reader library from selected locations."
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)) {
+                state.selectedFolders.forEachIndexed { index, folder ->
+                    if (index > 0) {
+                        GenesysDivider()
+                    }
+                    ReaderFolderRow(
+                        folder = folder,
+                        onRemoveFolder = { onRemoveLibraryFolder(folder.id) }
+                    )
+                }
+            }
+        }
+
+        Row(horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)) {
+            GenesysPrimaryButton(
+                text = "Add folder",
+                onClick = onAddLibraryFolder
+            )
+            if (state.invalidFolders.isNotEmpty()) {
+                GenesysSecondaryButton(
+                    text = "Clear invalid",
+                    onClick = onRemoveInvalidFolders
                 )
             }
             GenesysSecondaryButton(
                 text = "Refresh",
                 onClick = onRefresh
+            )
+        }
+    }
+}
+
+@Composable
+private fun ReaderFolderRow(
+    folder: ReaderLibraryFolder,
+    onRemoveFolder: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isValid = folder.isValid
+    val statusLabel = if (isValid) "Selected" else folder.invalidReason ?: "Unavailable"
+    val pathPreview = runCatching {
+        DocumentsContract.getTreeDocumentId(Uri.parse(folder.treeUri))
+            .substringAfter(':', folder.displayName)
+    }.getOrDefault(folder.displayName)
+
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
+            ) {
+                GenesysText(
+                    text = folder.displayName,
+                    style = GenesysTheme.typography.titleSmall,
+                    color = if (isValid) {
+                        GenesysTheme.colors.onSurface
+                    } else {
+                        GenesysTheme.colors.primary
+                    }
+                )
+                GenesysText(
+                    text = pathPreview,
+                    style = GenesysTheme.typography.bodySmall,
+                    color = GenesysTheme.colors.outline
+                )
+            }
+            GenesysChip(
+                text = statusLabel,
+                selected = isValid
+            )
+            GenesysSecondaryButton(
+                text = "Remove",
+                onClick = onRemoveFolder
             )
         }
     }
@@ -203,7 +323,7 @@ private fun ReaderStatusPanel(
     GenesysPanel(
         modifier = modifier.fillMaxWidth(),
         tone = GenesysPanelTone.Raised,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
     ) {
         GenesysText(
             text = title,
@@ -232,8 +352,9 @@ private fun ReaderBookCard(
         System.currentTimeMillis(),
         DateUtils.MINUTE_IN_MILLIS
     ).toString()
-    val progressLabel = book.percentComplete
-        ?.let { progress -> "${(progress * 100f).roundToInt()}% complete" }
+    val progressLabel = book.percentComplete?.let { progress ->
+        "${(progress * 100f).roundToInt()}% complete"
+    }
     val lastOpenedLabel = book.lastOpenedAt?.let { timestamp ->
         DateUtils.getRelativeTimeSpanString(
             timestamp,
@@ -242,23 +363,21 @@ private fun ReaderBookCard(
         ).toString()
     }
     val originLabel = when (book.source) {
-        ReaderBookSource.Device -> "On device"
+        ReaderBookSource.SafFolder -> "Selected folder"
         ReaderBookSource.ManagedCopy -> "Managed copy"
     }
     val activityLabel = when (book.source) {
-        ReaderBookSource.Device -> "Updated $ageLabel"
+        ReaderBookSource.SafFolder -> "Updated $ageLabel"
         ReaderBookSource.ManagedCopy -> "Added $ageLabel"
     }
 
     GenesysPanel(
         modifier = modifier.fillMaxWidth(),
         tone = if (hasReadingState) GenesysPanelTone.Heavy else GenesysPanelTone.Raised,
-        verticalArrangement = Arrangement.spacedBy(14.dp),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
         onClick = onOpenBook
     ) {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)) {
             GenesysText(
                 text = book.title,
                 style = GenesysTheme.typography.titleMedium,
@@ -286,7 +405,6 @@ private fun ReaderBookCard(
                     GenesysTheme.colors.outline
                 }
             )
-
             if (lastOpenedLabel != null) {
                 GenesysText(
                     text = buildString {
@@ -303,9 +421,7 @@ private fun ReaderBookCard(
             }
         }
 
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)) {
             GenesysPrimaryButton(
                 text = "Open",
                 onClick = onOpenBook
@@ -318,24 +434,4 @@ private fun ReaderBookCard(
             }
         }
     }
-}
-
-private fun requestReaderLibraryAccess(activity: Activity, onFinished: () -> Unit) {
-    XXPermissionsExt.with(activity)
-        .permissions(ManageExternalStoragePermission())
-        .onResult { _, _, _ ->
-            onFinished()
-        }
-        .request()
-}
-
-private fun Context.findActivity(): Activity? {
-    var current = this
-    while (current is android.content.ContextWrapper) {
-        if (current is Activity) {
-            return current
-        }
-        current = current.baseContext
-    }
-    return null
 }
