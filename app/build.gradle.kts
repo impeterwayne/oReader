@@ -67,6 +67,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:common"))
     implementation(project(":core:designsystem"))
+    implementation(project(":core:navigation"))
 
     // Feature modules
     implementation(project(":feature:notebook"))
@@ -85,8 +86,12 @@ dependencies {
     implementation(deps.composeUiToolingPreview)
     implementation(deps.activityCompose)
     implementation(deps.navigationCompose)
+    implementation(deps.navigation3Runtime)
+    implementation(deps.navigation3Ui)
     implementation(deps.hiltNavigationCompose)
     implementation(deps.androidxLifecycleRuntimeCompose)
+    implementation(deps.orbitCompose)
+    implementation("androidx.documentfile:documentfile:1.0.1")
     debugImplementation(deps.composeUiTooling)
 
     // ImmersionBar

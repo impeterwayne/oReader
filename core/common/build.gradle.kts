@@ -18,6 +18,9 @@ dependencies {
     api(deps.lifecycleViewmodelKtx)
     api(deps.androidxCoreKtx)
 
+    // Orbit MVI: expose ContainerHost/container APIs to BaseViewModel consumers.
+    api(deps.orbitViewmodel)
+
     // Coroutines
     implementation(deps.kotlinxCoroutinesCore)
     implementation(deps.kotlinxCoroutinesAndroid)

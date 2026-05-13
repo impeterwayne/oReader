@@ -40,6 +40,7 @@ include(":core:domain")
 include(":core:data")
 include(":core:designsystem")
 include(":core:common")
+include(":core:navigation")
 
 // Feature modules
 include(":feature:notebook")
