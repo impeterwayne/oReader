@@ -1,5 +1,7 @@
 package com.genesys.feature.notebook.pages
 
+import com.genesys.feature.notebook.navigation.NotebookPages
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -34,14 +36,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-object NotebookPagesDestination {
-    const val route = "notebook-pages"
-    const val BOOK_ID_ARG = "bookId"
-    const val routeWithArgs = "$route/{$BOOK_ID_ARG}"
-
-    fun createRoute(bookId: String): String = "$route/$bookId"
-}
-
 data class NotebookPagesUiState(
     val isLoading: Boolean = true,
     val notebook: Notebook? = null
@@ -70,7 +64,7 @@ class NotebookPagesViewModel @Inject constructor(
 
 @Composable
 fun NotebookPagesRoute(
-    bookId: String,
+    route: NotebookPages,
     onBack: () -> Unit,
     onOpenPage: (pageId: String, bookId: String) -> Unit,
     modifier: Modifier = Modifier,
@@ -78,8 +72,8 @@ fun NotebookPagesRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    androidx.compose.runtime.LaunchedEffect(bookId) {
-        viewModel.load(bookId)
+    androidx.compose.runtime.LaunchedEffect(route.bookId) {
+        viewModel.load(route.bookId)
     }
 
     LazyColumn(

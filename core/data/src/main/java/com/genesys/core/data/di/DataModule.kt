@@ -6,6 +6,7 @@ import com.genesys.core.data.repository.notebook.NotebookKeyValueRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookPageRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookStrokeRepositoryImpl
+import com.genesys.core.data.repository.reader.ReaderSettingsManager
 import com.genesys.core.data.repository.template.TemplateRepositoryImpl
 import com.genesys.core.domain.repository.notebook.NotebookFolderRepository
 import com.genesys.core.domain.repository.notebook.NotebookImageRepository
@@ -13,6 +14,7 @@ import com.genesys.core.domain.repository.notebook.NotebookKeyValueRepository
 import com.genesys.core.domain.repository.notebook.NotebookPageRepository
 import com.genesys.core.domain.repository.notebook.NotebookRepository
 import com.genesys.core.domain.repository.notebook.NotebookStrokeRepository
+import com.genesys.core.domain.repository.reader.ReaderSettingsRepository
 import com.genesys.core.domain.repository.template.TemplateRepository
 import dagger.Binds
 import dagger.Module
@@ -56,4 +58,9 @@ internal interface DataModule {
     fun bindNotebookKeyValueRepository(
         impl: NotebookKeyValueRepositoryImpl
     ): NotebookKeyValueRepository
+
+    @Binds
+    fun bindReaderSettingsRepository(
+        impl: ReaderSettingsManager
+    ): ReaderSettingsRepository
 }

@@ -1,5 +1,7 @@
 package com.genesys.feature.notebook.library
 
+import com.genesys.feature.notebook.navigation.NotebookEditor
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -111,7 +113,7 @@ class NotebookLibraryViewModel @Inject constructor(
 
 @Composable
 fun NotebookLibraryRoute(
-    onOpenNotebook: (pageId: String, bookId: String?) -> Unit,
+    onOpenNotebook: (NotebookEditor) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: NotebookLibraryViewModel = hiltViewModel()
 ) {
@@ -148,7 +150,7 @@ fun NotebookLibraryRoute(
                     text = "New notebook",
                     onClick = {
                         viewModel.createNotebook { pageId, bookId ->
-                            onOpenNotebook(pageId, bookId)
+                            onOpenNotebook(NotebookEditor(pageId = pageId, bookId = bookId))
                         }
                     }
                 )
@@ -156,7 +158,7 @@ fun NotebookLibraryRoute(
                     text = "Quick page",
                     onClick = {
                         viewModel.createQuickPage { pageId ->
-                            onOpenNotebook(pageId, null)
+                            onOpenNotebook(NotebookEditor(pageId = pageId))
                         }
                     }
                 )
@@ -188,7 +190,7 @@ fun NotebookLibraryRoute(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 onClick = {
                     viewModel.openNotebook(notebook.id) { pageId, bookId ->
-                        onOpenNotebook(pageId, bookId)
+                        onOpenNotebook(NotebookEditor(pageId = pageId, bookId = bookId))
                     }
                 }
             ) {
@@ -212,7 +214,7 @@ fun NotebookLibraryRoute(
                 modifier = Modifier.fillMaxWidth(),
                 tone = GenesysPanelTone.Raised,
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                onClick = { onOpenNotebook(page.id, null) }
+                onClick = { onOpenNotebook(NotebookEditor(pageId = page.id)) }
             ) {
                 GenesysText(
                     text = "Quick page",
