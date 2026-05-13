@@ -36,8 +36,7 @@ class KoreaderDirectories(context: Context) {
     /** KOReader plugins */
     val pluginsDir: File = File(dataDir, "plugins")
 
-    /** Staged files from content:// URIs */
-    val stagingDir: File = File(cacheDir, "staged")
+    val stagingDir: File = File(dataDir, "staged")
 
     /**
      * Ensure all required directories exist.
