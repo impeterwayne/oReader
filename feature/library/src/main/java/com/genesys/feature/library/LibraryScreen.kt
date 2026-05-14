@@ -1,5 +1,7 @@
 package com.genesys.feature.library
 
+import android.app.Activity
+import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import android.text.format.DateUtils
@@ -38,6 +40,8 @@ import com.genesys.core.model.library.Book
 import com.genesys.core.model.library.BookSource
 import com.genesys.core.model.library.LibraryFolder
 import com.genesys.feature.koreader.host.KoreaderActivity
+import com.hjq.permissions.dsl.XXPermissionsExt
+import com.hjq.permissions.permission.special.ManageExternalStoragePermission
 import kotlinx.coroutines.flow.collectLatest
 import kotlin.math.roundToInt
 
@@ -94,6 +98,7 @@ fun LibrarySettingsRoute(
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val activity = context.findActivity()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val openTreeLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocumentTree()
@@ -117,7 +122,21 @@ fun LibrarySettingsRoute(
     LibrarySettingsScreen(
         state = uiState,
         onBack = onBack,
-        onAddLibraryFolder = { openTreeLauncher.launch(null) },
+        onAddLibraryFolder = {
+            activity?.let {
+                requestLibraryFolderAccess(
+                    activity = it,
+                    onGranted = { openTreeLauncher.launch(null) },
+                    onDenied = {
+                        Toast.makeText(
+                            context,
+                            "Storage permission is required before picking a folder.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            }
+        },
         onRemoveLibraryFolder = { folderId ->
             viewModel.onAction(LibraryAction.RemoveLibraryFolder(folderId))
         },
@@ -652,4 +671,32 @@ private fun BookCard(
             }
         }
     }
+}
+
+private fun requestLibraryFolderAccess(
+    activity: Activity,
+    onGranted: () -> Unit,
+    onDenied: () -> Unit
+) {
+    XXPermissionsExt.with(activity)
+        .permissions(ManageExternalStoragePermission())
+        .onResult { allGranted, _, _ ->
+            if (allGranted) {
+                onGranted()
+            } else {
+                onDenied()
+            }
+        }
+        .request()
+}
+
+private fun Context.findActivity(): Activity? {
+    var current = this
+    while (current is android.content.ContextWrapper) {
+        if (current is Activity) {
+            return current
+        }
+        current = current.baseContext
+    }
+    return null
 }
