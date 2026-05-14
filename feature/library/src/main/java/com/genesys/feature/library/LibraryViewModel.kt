@@ -28,7 +28,6 @@ class LibraryViewModel @Inject constructor(
     override val container = container<LibraryUiState, LibrarySideEffect>(LibraryUiState())
 
     val uiState: StateFlow<LibraryUiState> = container.stateFlow
-    val sideEffects: Flow<LibrarySideEffect> = container.sideEffectFlow
 
     init {
         launchBlock {

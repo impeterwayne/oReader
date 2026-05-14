@@ -1,5 +1,6 @@
 package org.koreader.launcher
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.Activity
@@ -18,6 +19,8 @@ import android.util.Log
 import android.view.*
 import android.widget.Toast
 import androidx.annotation.RequiresApi
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import org.koreader.launcher.device.Device
 import org.koreader.launcher.dialog.LightDialog
 import org.koreader.launcher.extensions.*
@@ -25,7 +28,8 @@ import java.io.File
 import java.util.Locale
 import java.util.concurrent.CountDownLatch
 
-class MainActivity : NativeActivity(), LuaInterface {
+class MainActivity : NativeActivity(), LuaInterface,
+    ActivityCompat.OnRequestPermissionsResultCallback {
 
     private val tag = this::class.java.simpleName
 
@@ -65,6 +69,7 @@ class MainActivity : NativeActivity(), LuaInterface {
 
     companion object {
         private const val TAG_SURFACE = "Surface"
+        private const val MANDATORY_PERMISSIONS_ID = 1
         private const val ACTION_SAF_FILEPICKER_ID = 2
         private val BATTERY_FILTER = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         const val EXTRA_OPEN_FILE_PATH = "org.koreader.launcher.extra.OPEN_FILE_PATH"
@@ -136,6 +141,10 @@ class MainActivity : NativeActivity(), LuaInterface {
             "native orientation: %s", if (this.screenIsLandscape) "landscape" else "portrait"))
 
         registerEventReceiver()
+
+        if (!hasMandatoryPermissions()) {
+            requestMandatoryPermissions()
+        }
     }
 
     /* Called when the activity has become visible. */
@@ -201,6 +210,22 @@ class MainActivity : NativeActivity(), LuaInterface {
         setIntent(intent)
     }
 
+    /* Called on permission result */
+    override fun onRequestPermissionsResult(requestCode: Int, permissions:
+        Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == MANDATORY_PERMISSIONS_ID) {
+            for (i in permissions.indices) {
+                if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                    Log.e(tag, "mandatory permission rejected: ${permissions[i]}. Bye!")
+                    Toast.makeText(this, resources.getString(R.string.error_no_permissions),
+                        Toast.LENGTH_SHORT).show()
+                    finish()
+                }
+            }
+        }
+    }
+
     /* Called on activity result, available from KitKat onwards */
     @TargetApi(19)
     override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: Intent?) {
@@ -239,6 +264,11 @@ class MainActivity : NativeActivity(), LuaInterface {
     @Suppress("unused")
     fun onNativeCrash() {
         MainApp.crashReport(applicationContext)
+    }
+
+    @Suppress("unused")
+    fun hasRequiredPermissions(): Boolean {
+        return hasMandatoryPermissions()
     }
 
     /*---------------------------------------------------------------
@@ -776,6 +806,33 @@ class MainActivity : NativeActivity(), LuaInterface {
             }
         } else {
             return 0
+        }
+    }
+
+    @Suppress("NewApi")
+    private fun hasMandatoryPermissions(): Boolean {
+        return if (MainApp.isAtLeastApi(Build.VERSION_CODES.R)) {
+            Environment.isExternalStorageManager()
+        } else {
+            (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED)
+        }
+    }
+
+    @Suppress("NewApi")
+    private fun requestMandatoryPermissions() {
+        if (MainApp.isAtLeastApi(Build.VERSION_CODES.R)) {
+            val intent = Intent().apply {
+                action = Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION
+                data = Uri.fromParts("package", packageName, null)
+            }
+            requestSpecialPermission(intent,
+                resources.getString(R.string.permission_manage_storage),
+                null, null)
+        } else {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                MANDATORY_PERMISSIONS_ID)
         }
     }
 

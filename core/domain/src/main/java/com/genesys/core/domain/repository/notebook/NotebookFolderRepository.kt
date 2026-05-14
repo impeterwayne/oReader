@@ -3,11 +3,6 @@ package com.genesys.core.domain.repository.notebook
 import com.genesys.core.model.notebook.NotebookFolder
 import kotlinx.coroutines.flow.Flow
 
-/**
- * Repository contract for notebook folder hierarchy.
- *
- * Ported from Notable's FolderRepository with LiveData→Flow migration.
- */
 interface NotebookFolderRepository {
 
     suspend fun create(folder: NotebookFolder)

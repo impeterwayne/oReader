@@ -44,4 +44,6 @@ dependencies {
     
     // Timber
     implementation(deps.timber)
+
+    implementation(deps.orbitCompose)
 }

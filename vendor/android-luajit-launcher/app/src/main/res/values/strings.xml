@@ -11,6 +11,9 @@
     <string name="test_share_button">Save report</string>
     <string name="test_share_rationale">Send report to</string>
 
+    <string name="error_no_permissions">Missing mandatory permissions</string>
+    <string name="permission_manage_storage">Please grant storage permission to access your documents</string>
+
     <!-- don't translate -->
     <string name="unicode_bomb" translatable="false">💣</string>
 </resources>

@@ -17,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
 
@@ -96,23 +99,12 @@ private fun BottomBarItem(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
     ) {
-        Box(
-            modifier = Modifier
-                .size(28.dp)
-                .background(badgeColor)
-                .border(
-                    width = GenesysTheme.strokes.thin,
-                    color = if (selected) GenesysTheme.colors.primary else GenesysTheme.colors.outlineVariant,
-                    shape = GenesysTheme.shapes.small
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            GenesysText(
-                text = destination.badge,
-                style = GenesysTheme.typography.labelSmall,
-                color = badgeContentColor
-            )
-        }
+        Image(
+            painter = painterResource(id = destination.iconResId),
+            contentDescription = destination.label,
+            modifier = Modifier.size(24.dp),
+            colorFilter = ColorFilter.tint(contentColor)
+        )
 
         GenesysText(
             text = destination.label,
