@@ -41,6 +41,7 @@ include(":core:data")
 include(":core:designsystem")
 include(":core:common")
 include(":core:navigation")
+include(":core:datastore")
 
 // Feature modules
 include(":feature:notebook")

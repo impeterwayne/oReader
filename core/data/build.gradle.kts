@@ -19,9 +19,6 @@ dependencies {
     implementation(project(":core:database"))
     implementation(project(":core:common"))
 
-    // MMKV
-    implementation(deps.mmkv)
-
     // DocumentFile
     implementation("androidx.documentfile:documentfile:1.0.1")
 
