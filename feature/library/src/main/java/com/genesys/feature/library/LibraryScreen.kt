@@ -9,36 +9,34 @@ import android.text.format.Formatter
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.genesys.core.designsystem.component.GenesysChip
 import com.genesys.core.designsystem.component.GenesysDivider
 import com.genesys.core.designsystem.component.GenesysPageFrame
-import com.genesys.core.designsystem.component.GenesysPanel
-import com.genesys.core.designsystem.component.GenesysPanelTone
 import com.genesys.core.designsystem.component.GenesysPrimaryButton
-import com.genesys.core.designsystem.component.GenesysSectionHeader
 import com.genesys.core.designsystem.component.GenesysSecondaryButton
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
@@ -162,13 +160,16 @@ private fun LibraryScreen(
     onRemoveBook: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GenesysPageFrame(modifier = modifier) {
+    GenesysPageFrame(
+        modifier = modifier,
+        contentPadding = PaddingValues(GenesysTheme.spacing.sm)
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(GenesysTheme.colors.surface)
                 .statusBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.md)
+            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
         ) {
             LibraryHeader(
                 title = "Reader Library",
@@ -181,56 +182,32 @@ private fun LibraryScreen(
                 onSecondaryAction = onRefresh
             )
 
-            if (state.totalPages > 1) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .clip(GenesysTheme.shapes.small)
-                            .clickable(
-                                enabled = state.selectedPageIndex > 0,
-                                onClick = { onSelectPage(state.selectedPageIndex - 1) }
-                            )
-                            .padding(vertical = GenesysTheme.spacing.xxs, horizontal = GenesysTheme.spacing.sm)
-                    ) {
-                        Image(
-                            painter = painterResource(id = com.genesys.core.designsystem.R.drawable.ic_chevron_left),
-                            contentDescription = "Previous Page",
-                            colorFilter = ColorFilter.tint(
-                                if (state.selectedPageIndex > 0) GenesysTheme.colors.primary
-                                else GenesysTheme.colors.outlineVariant
-                            )
-                        )
-                    }
-
-                    GenesysText(
-                        text = "Page ${state.selectedPageIndex + 1} of ${state.totalPages}",
-                        style = GenesysTheme.typography.labelMedium,
-                        color = GenesysTheme.colors.outline
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .clip(GenesysTheme.shapes.small)
-                            .clickable(
-                                enabled = state.selectedPageIndex < state.totalPages - 1,
-                                onClick = { onSelectPage(state.selectedPageIndex + 1) }
-                            )
-                            .padding(vertical = GenesysTheme.spacing.xxs, horizontal = GenesysTheme.spacing.sm)
-                    ) {
-                        Image(
-                            painter = painterResource(id = com.genesys.core.designsystem.R.drawable.ic_chevron_right),
-                            contentDescription = "Next Page",
-                            colorFilter = ColorFilter.tint(
-                                if (state.selectedPageIndex < state.totalPages - 1) GenesysTheme.colors.primary
-                                else GenesysTheme.colors.outlineVariant
-                            )
-                        )
+            LibraryMetaRow(
+                primaryText = if (state.books.isEmpty()) {
+                    "No books indexed"
+                } else {
+                    "${state.books.size} books"
+                },
+                secondaryText = buildString {
+                    val validFolderCount = state.selectedFolders.count { it.isValid }
+                    append(validFolderCount)
+                    append(" folder")
+                    if (validFolderCount != 1) append('s')
+                    append(" active")
+                    if (state.totalPages > 0) {
+                        append(" · Page ")
+                        append(state.selectedPageIndex + 1)
+                        append('/')
+                        append(state.totalPages)
                     }
                 }
+            )
+
+            if (state.totalPages > 1) {
+                LibraryPaginationRow(
+                    state = state,
+                    onSelectPage = onSelectPage
+                )
             }
 
             when {
@@ -258,14 +235,16 @@ private fun LibraryScreen(
                 else -> {
                     Column(
                         modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.md)
+                        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
                     ) {
                         val chunks = state.currentPageBooks.chunked(2)
                         for (i in 0 until 2) {
                             val rowBooks = chunks.getOrNull(i) ?: emptyList()
                             Row(
-                                modifier = Modifier.fillMaxWidth().weight(1f),
-                                horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.md)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f),
+                                horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
                             ) {
                                 rowBooks.forEach { book ->
                                     Box(modifier = Modifier.weight(1f).fillMaxHeight()) {
@@ -283,8 +262,6 @@ private fun LibraryScreen(
                             }
                         }
                     }
-
-
                 }
             }
         }
@@ -301,13 +278,16 @@ private fun LibrarySettingsScreen(
     onRefresh: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GenesysPageFrame(modifier = modifier) {
+    GenesysPageFrame(
+        modifier = modifier,
+        contentPadding = PaddingValues(GenesysTheme.spacing.sm)
+    ) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(GenesysTheme.colors.surface)
                 .statusBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.md)
+            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
         ) {
             item {
                 LibraryHeader(
@@ -347,157 +327,155 @@ private fun LibraryHeader(
     onSecondaryAction: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .padding(vertical = GenesysTheme.spacing.sm, horizontal = GenesysTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
+            ) {
+                GenesysText(
+                    text = title,
+                    style = GenesysTheme.typography.titleLarge,
+                    color = GenesysTheme.colors.onSurface
+                )
+                GenesysText(
+                    text = subtitle,
+                    style = GenesysTheme.typography.bodySmall,
+                    color = GenesysTheme.colors.outline
+                )
+            }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HeaderActionButton(
+                    iconRes = secondaryActionIconRes,
+                    contentDescription = secondaryActionContentDescription,
+                    onClick = onSecondaryAction
+                )
+                HeaderActionButton(
+                    iconRes = primaryActionIconRes,
+                    contentDescription = primaryActionContentDescription,
+                    onClick = onPrimaryAction
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeaderActionButton(
+    iconRes: Int,
+    contentDescription: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    Box(
+        modifier = modifier
+            .clip(GenesysTheme.shapes.small)
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(GenesysTheme.spacing.xs)
+    ) {
+        Image(
+            painter = painterResource(id = iconRes),
+            contentDescription = contentDescription,
+            colorFilter = ColorFilter.tint(
+                if (enabled) GenesysTheme.colors.onSurface else GenesysTheme.colors.outlineVariant
+            )
+        )
+    }
+}
+
+@Composable
+private fun LibraryMetaRow(
+    primaryText: String,
+    secondaryText: String,
+    modifier: Modifier = Modifier
+) {
     Row(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = GenesysTheme.spacing.xxs),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        GenesysSectionHeader(
-            title = title,
-            subtitle = subtitle,
-            modifier = Modifier.weight(1f)
-        )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .clip(GenesysTheme.shapes.small)
-                    .clickable(onClick = onSecondaryAction)
-                    .padding(GenesysTheme.spacing.sm)
-            ) {
-                Image(
-                    painter = painterResource(id = secondaryActionIconRes),
-                    contentDescription = secondaryActionContentDescription,
-                    colorFilter = ColorFilter.tint(GenesysTheme.colors.onSurface)
-                )
-            }
-            Box(
-                modifier = Modifier
-                    .clip(GenesysTheme.shapes.small)
-                    .clickable(onClick = onPrimaryAction)
-                    .padding(GenesysTheme.spacing.sm)
-            ) {
-                Image(
-                    painter = painterResource(id = primaryActionIconRes),
-                    contentDescription = primaryActionContentDescription,
-                    colorFilter = ColorFilter.tint(GenesysTheme.colors.onSurface)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun LibraryOverviewPanel(
-    state: LibraryUiState,
-    onOpenSettings: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val validFolderCount = state.selectedFolders.count { it.isValid }
-
-    GenesysPanel(
-        modifier = modifier.fillMaxWidth(),
-        tone = GenesysPanelTone.Frame,
-        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
-    ) {
         GenesysText(
-            text = if (state.books.isEmpty()) {
-                "Library waiting for books"
-            } else {
-                "${state.books.size} books across ${state.totalPages} pages"
-            },
-            style = GenesysTheme.typography.titleMedium
-        )
-        GenesysText(
-            text = buildString {
-                append(validFolderCount)
-                append(" active folder")
-                if (validFolderCount != 1) {
-                    append('s')
-                }
-                append(" selected for scanning")
-                if (state.invalidFolders.isNotEmpty()) {
-                    append(". ")
-                    append(state.invalidFolders.size)
-                    append(" unavailable folder")
-                    if (state.invalidFolders.size != 1) {
-                        append('s')
-                    }
-                    append(" need attention in settings.")
-                }
-            },
+            text = primaryText,
             style = GenesysTheme.typography.bodyMedium,
+            color = GenesysTheme.colors.onSurface
+        )
+        GenesysText(
+            text = secondaryText,
+            style = GenesysTheme.typography.bodySmall,
             color = GenesysTheme.colors.outline
         )
-        if (state.totalPages > 0) {
-            GenesysChip(
-                text = "Page ${state.selectedPageIndex + 1} of ${state.totalPages}",
-                selected = true
-            )
-        }
-        GenesysSecondaryButton(
-            text = "Manage folders",
-            onClick = onOpenSettings
-        )
     }
 }
 
 @Composable
-private fun LibraryPaginationPanel(
+private fun LibraryPaginationRow(
     state: LibraryUiState,
     onSelectPage: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    GenesysPanel(
-        modifier = modifier.fillMaxWidth(),
-        tone = GenesysPanelTone.Frame,
-        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .padding(horizontal = GenesysTheme.spacing.sm, vertical = GenesysTheme.spacing.xs),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        GenesysText(
-            text = "Browse by page",
-            style = GenesysTheme.typography.titleMedium
+        HeaderActionButton(
+            iconRes = com.genesys.core.designsystem.R.drawable.ic_chevron_left,
+            contentDescription = "Previous Page",
+            onClick = { onSelectPage(state.selectedPageIndex - 1) },
+            enabled = state.selectedPageIndex > 0
         )
+
         GenesysText(
             text = buildString {
-                append("Showing books ")
+                append("Showing ")
                 append(state.selectedPageIndex * state.pageSize + 1)
                 append("–")
                 append((state.selectedPageIndex * state.pageSize + state.currentPageBooks.size).coerceAtLeast(0))
                 append(" of ")
                 append(state.books.size)
             },
-            style = GenesysTheme.typography.bodyMedium,
+            style = GenesysTheme.typography.bodySmall,
             color = GenesysTheme.colors.outline
         )
-        Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)) {
-            val pageIndices = 0 until state.totalPages
-            pageIndices.chunked(3).forEach { rowPages ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
-                ) {
-                    rowPages.forEach { pageIndex ->
-                        val start = pageIndex * state.pageSize + 1
-                        val end = ((pageIndex + 1) * state.pageSize).coerceAtMost(state.books.size)
-                        if (pageIndex == state.selectedPageIndex) {
-                            GenesysPrimaryButton(
-                                text = "$start-$end",
-                                onClick = { onSelectPage(pageIndex) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            GenesysSecondaryButton(
-                                text = "$start-$end",
-                                onClick = { onSelectPage(pageIndex) },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
-                    }
-                }
-            }
-        }
+
+        HeaderActionButton(
+            iconRes = com.genesys.core.designsystem.R.drawable.ic_chevron_right,
+            contentDescription = "Next Page",
+            onClick = { onSelectPage(state.selectedPageIndex + 1) },
+            enabled = state.selectedPageIndex < state.totalPages - 1
+        )
     }
 }
 
@@ -512,9 +490,15 @@ private fun LibrarySummaryPanel(
 ) {
     val validFolderCount = state.selectedFolders.count { it.isValid }
 
-    GenesysPanel(
-        modifier = modifier.fillMaxWidth(),
-        tone = GenesysPanelTone.Frame,
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .padding(GenesysTheme.spacing.sm),
         verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
     ) {
         GenesysText(
@@ -523,7 +507,8 @@ private fun LibrarySummaryPanel(
             } else {
                 "${state.books.size} books in your library"
             },
-            style = GenesysTheme.typography.titleMedium
+            style = GenesysTheme.typography.titleMedium,
+            color = GenesysTheme.colors.onSurface
         )
         GenesysText(
             text = buildString {
@@ -543,7 +528,7 @@ private fun LibrarySummaryPanel(
                     append(" can be removed.")
                 }
             },
-            style = GenesysTheme.typography.bodyMedium,
+            style = GenesysTheme.typography.bodySmall,
             color = GenesysTheme.colors.outline
         )
 
@@ -553,7 +538,7 @@ private fun LibrarySummaryPanel(
                 body = "Add folder to build reader library from selected locations."
             )
         } else {
-            Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)) {
+            Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)) {
                 state.selectedFolders.forEachIndexed { index, folder ->
                     if (index > 0) {
                         GenesysDivider()
@@ -598,43 +583,45 @@ private fun FolderRow(
             .substringAfter(':', folder.displayName)
     }.getOrDefault(folder.displayName)
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = GenesysTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
-            ) {
-                GenesysText(
-                    text = folder.displayName,
-                    style = GenesysTheme.typography.titleSmall,
-                    color = if (isValid) {
-                        GenesysTheme.colors.onSurface
-                    } else {
-                        GenesysTheme.colors.primary
-                    }
-                )
-                GenesysText(
-                    text = pathPreview,
-                    style = GenesysTheme.typography.bodySmall,
-                    color = GenesysTheme.colors.outline
-                )
-            }
-            GenesysChip(
-                text = statusLabel,
-                selected = isValid
+            GenesysText(
+                text = folder.displayName,
+                style = GenesysTheme.typography.titleSmall,
+                color = if (isValid) {
+                    GenesysTheme.colors.onSurface
+                } else {
+                    GenesysTheme.colors.primary
+                }
             )
-            GenesysSecondaryButton(
-                text = "Remove",
-                onClick = onRemoveFolder
+            GenesysText(
+                text = statusLabel,
+                style = GenesysTheme.typography.bodySmall,
+                color = if (isValid) {
+                    GenesysTheme.colors.outline
+                } else {
+                    GenesysTheme.colors.primary
+                }
+            )
+            GenesysText(
+                text = pathPreview,
+                style = GenesysTheme.typography.bodySmall,
+                color = GenesysTheme.colors.outline
             )
         }
+        GenesysSecondaryButton(
+            text = "Remove",
+            onClick = onRemoveFolder
+        )
     }
 }
 
@@ -644,18 +631,25 @@ private fun LibraryStatusPanel(
     body: String,
     modifier: Modifier = Modifier
 ) {
-    GenesysPanel(
-        modifier = modifier.fillMaxWidth(),
-        tone = GenesysPanelTone.Raised,
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .padding(GenesysTheme.spacing.sm),
         verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
     ) {
         GenesysText(
             text = title,
-            style = GenesysTheme.typography.titleMedium
+            style = GenesysTheme.typography.titleMedium,
+            color = GenesysTheme.colors.onSurface
         )
         GenesysText(
             text = body,
-            style = GenesysTheme.typography.bodyMedium,
+            style = GenesysTheme.typography.bodySmall,
             color = GenesysTheme.colors.outline
         )
     }
@@ -695,11 +689,29 @@ private fun BookCard(
         BookSource.ManagedCopy -> "Added $ageLabel"
     }
 
-    GenesysPanel(
-        modifier = modifier.fillMaxWidth(),
-        tone = if (hasReadingState) GenesysPanelTone.Heavy else GenesysPanelTone.Raised,
-        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
-        onClick = onOpenBook
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(GenesysTheme.shapes.small)
+            .background(
+                if (hasReadingState) {
+                    GenesysTheme.colors.surfaceContainerLow
+                } else {
+                    GenesysTheme.colors.surface
+                }
+            )
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = if (hasReadingState) {
+                    GenesysTheme.colors.outline
+                } else {
+                    GenesysTheme.colors.outlineVariant
+                },
+                shape = GenesysTheme.shapes.small
+            )
+            .clickable(onClick = onOpenBook)
+            .padding(GenesysTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
     ) {
         Column(
             verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
@@ -707,29 +719,17 @@ private fun BookCard(
             GenesysText(
                 text = book.title,
                 style = GenesysTheme.typography.titleMedium,
-                color = if (hasReadingState) {
-                    GenesysTheme.colors.onPrimaryContainer
-                } else {
-                    GenesysTheme.colors.onSurface
-                }
+                color = GenesysTheme.colors.onSurface
             )
             GenesysText(
-                text = "${book.extension.uppercase()} | $sizeLabel | $originLabel",
-                style = GenesysTheme.typography.bodyMedium,
-                color = if (hasReadingState) {
-                    GenesysTheme.colors.onPrimaryContainer
-                } else {
-                    GenesysTheme.colors.outline
-                }
+                text = "${book.extension.uppercase()} · $sizeLabel · $originLabel",
+                style = GenesysTheme.typography.bodySmall,
+                color = GenesysTheme.colors.outline
             )
             GenesysText(
-                text = "$activityLabel | ${book.locationLabel}",
-                style = GenesysTheme.typography.bodyMedium,
-                color = if (hasReadingState) {
-                    GenesysTheme.colors.onPrimaryContainer
-                } else {
-                    GenesysTheme.colors.outline
-                }
+                text = "$activityLabel · ${book.locationLabel}",
+                style = GenesysTheme.typography.bodySmall,
+                color = GenesysTheme.colors.outline
             )
             if (lastOpenedLabel != null) {
                 GenesysText(
@@ -737,14 +737,32 @@ private fun BookCard(
                         append("Last opened ")
                         append(lastOpenedLabel)
                         if (progressLabel != null) {
-                            append(" | ")
+                            append(" · ")
                             append(progressLabel)
                         }
                     },
-                    style = GenesysTheme.typography.bodyMedium,
-                    color = GenesysTheme.colors.onPrimaryContainer
+                    style = GenesysTheme.typography.bodySmall,
+                    color = GenesysTheme.colors.onSurface
                 )
             }
+        }
+
+        GenesysDivider()
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            GenesysText(
+                text = if (hasReadingState) "Continue reading" else "Open book",
+                style = GenesysTheme.typography.labelMedium,
+                color = GenesysTheme.colors.onSurface
+            )
+            GenesysSecondaryButton(
+                text = "Remove",
+                onClick = onRemoveBook
+            )
         }
     }
 }

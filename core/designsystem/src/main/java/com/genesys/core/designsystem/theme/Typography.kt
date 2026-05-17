@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.sp
 
 private val EditorialFontFamily = FontFamily.Serif
 private val UtilityFontFamily = FontFamily.SansSerif
+private val ReadingFontFamily = FontFamily.SansSerif
 
 @Immutable
 data class GenesysTypography(
@@ -31,81 +32,84 @@ data class GenesysTypography(
 
 internal val defaultTypography = GenesysTypography(
     displayLarge = TextStyle(
-        fontFamily = EditorialFontFamily,
+        fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 56.sp,
-        lineHeight = 64.sp,
-        letterSpacing = (-1).sp
+        fontSize = 54.sp,
+        lineHeight = 60.sp,
+        letterSpacing = (-0.6).sp
     ),
     displayMedium = TextStyle(
-        fontFamily = EditorialFontFamily,
+        fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 45.sp,
-        lineHeight = 52.sp
+        fontSize = 42.sp,
+        lineHeight = 48.sp,
+        letterSpacing = (-0.3).sp
     ),
     displaySmall = TextStyle(
-        fontFamily = EditorialFontFamily,
+        fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 36.sp,
-        lineHeight = 44.sp
-    ),
-    headlineLarge = TextStyle(
-        fontFamily = EditorialFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
+        fontSize = 34.sp,
         lineHeight = 40.sp
     ),
-    headlineMedium = TextStyle(
-        fontFamily = EditorialFontFamily,
+    headlineLarge = TextStyle(
+        fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp
+        fontSize = 30.sp,
+        lineHeight = 36.sp,
+        letterSpacing = (-0.2).sp
+    ),
+    headlineMedium = TextStyle(
+        fontFamily = UtilityFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 26.sp,
+        lineHeight = 32.sp,
+        letterSpacing = (-0.1).sp
     ),
     headlineSmall = TextStyle(
-        fontFamily = EditorialFontFamily,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-        lineHeight = 32.sp
-    ),
-    titleLarge = TextStyle(
         fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 22.sp,
         lineHeight = 28.sp
+    ),
+    titleLarge = TextStyle(
+        fontFamily = UtilityFontFamily,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 20.sp,
+        lineHeight = 26.sp
     ),
     titleMedium = TextStyle(
         fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.SemiBold,
         fontSize = 16.sp,
         lineHeight = 22.sp,
-        letterSpacing = 0.15.sp
+        letterSpacing = 0.1.sp
     ),
     titleSmall = TextStyle(
         fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
+        lineHeight = 18.sp,
         letterSpacing = 0.1.sp
     ),
     bodyLarge = TextStyle(
-        fontFamily = EditorialFontFamily,
+        fontFamily = ReadingFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.2.sp
+        lineHeight = 22.sp,
+        letterSpacing = 0.1.sp
     ),
     bodyMedium = TextStyle(
-        fontFamily = EditorialFontFamily,
+        fontFamily = ReadingFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.15.sp
+        lineHeight = 19.sp,
+        letterSpacing = 0.1.sp
     ),
     bodySmall = TextStyle(
-        fontFamily = EditorialFontFamily,
+        fontFamily = ReadingFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 18.sp,
+        lineHeight = 16.sp,
         letterSpacing = 0.1.sp
     ),
     labelLarge = TextStyle(
@@ -113,21 +117,21 @@ internal val defaultTypography = GenesysTypography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 14.sp,
         lineHeight = 18.sp,
-        letterSpacing = 0.8.sp
+        letterSpacing = 0.4.sp
     ),
     labelMedium = TextStyle(
         fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
         lineHeight = 16.sp,
-        letterSpacing = 0.8.sp
+        letterSpacing = 0.4.sp
     ),
     labelSmall = TextStyle(
         fontFamily = UtilityFontFamily,
         fontWeight = FontWeight.Medium,
         fontSize = 11.sp,
         lineHeight = 14.sp,
-        letterSpacing = 0.8.sp
+        letterSpacing = 0.35.sp
     )
 )
 

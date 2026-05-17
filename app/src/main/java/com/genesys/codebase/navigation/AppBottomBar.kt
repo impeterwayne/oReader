@@ -34,18 +34,13 @@ fun AppBottomBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(GenesysTheme.colors.surfaceContainerHighest)
-            .border(
-                width = GenesysTheme.strokes.thin,
-                color = GenesysTheme.colors.outline,
-                shape = GenesysTheme.shapes.large
-            )
+            .background(GenesysTheme.colors.surface)
             .navigationBarsPadding()
             .padding(
-                horizontal = GenesysTheme.spacing.xs,
-                vertical = GenesysTheme.spacing.sm
+                horizontal = GenesysTheme.spacing.xxs,
+                vertical = GenesysTheme.spacing.xs
             ),
-        horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
+        horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
     ) {
         bottomDestinations.forEach { destination ->
             BottomBarItem(
@@ -75,26 +70,20 @@ private fun BottomBarItem(
     } else {
         GenesysTheme.colors.onSurface
     }
-    val badgeColor = if (selected) {
-        GenesysTheme.colors.surface
-    } else {
-        GenesysTheme.colors.surfaceContainerLow
-    }
-    val badgeContentColor = GenesysTheme.colors.onSurface
 
     Column(
         modifier = modifier
-            .clip(GenesysTheme.shapes.medium)
+            .clip(GenesysTheme.shapes.small)
             .background(containerColor)
             .border(
                 width = GenesysTheme.strokes.thin,
                 color = if (selected) GenesysTheme.colors.primary else GenesysTheme.colors.outlineVariant,
-                shape = GenesysTheme.shapes.medium
+                shape = GenesysTheme.shapes.small
             )
             .clickable(onClick = onClick)
             .padding(
-                horizontal = GenesysTheme.spacing.xs,
-                vertical = GenesysTheme.spacing.sm
+                horizontal = GenesysTheme.spacing.xxs,
+                vertical = GenesysTheme.spacing.xs
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
@@ -102,13 +91,13 @@ private fun BottomBarItem(
         Image(
             painter = painterResource(id = destination.iconResId),
             contentDescription = destination.label,
-            modifier = Modifier.size(24.dp),
+            modifier = Modifier.size(20.dp),
             colorFilter = ColorFilter.tint(contentColor)
         )
 
         GenesysText(
             text = destination.label,
-            style = GenesysTheme.typography.labelMedium.copy(textAlign = TextAlign.Center),
+            style = GenesysTheme.typography.labelSmall.copy(textAlign = TextAlign.Center),
             color = contentColor
         )
     }

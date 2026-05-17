@@ -15,25 +15,35 @@ import com.genesys.core.designsystem.theme.GenesysTheme
 fun GenesysPageFrame(
     modifier: Modifier = Modifier,
     contentPadding: PaddingValues? = null,
+    framed: Boolean = true,
     content: @Composable BoxScope.() -> Unit
 ) {
-    val resolvedContentPadding = contentPadding ?: PaddingValues(GenesysTheme.spacing.md)
+    val colors = GenesysTheme.colors
+    val spacing = GenesysTheme.spacing
+    val resolvedContentPadding = contentPadding ?: PaddingValues(spacing.md)
 
     Box(
         modifier = modifier
             .fillMaxSize()
-            .background(GenesysTheme.colors.surfaceDim)
-            .padding(GenesysTheme.spacing.md)
+            .background(colors.background)
+            .padding(spacing.sm)
     ) {
+        val frameModifier = if (framed) {
+            Modifier
+                .background(colors.surface)
+                .border(
+                    width = GenesysTheme.strokes.thin,
+                    color = colors.outlineVariant,
+                    shape = GenesysTheme.shapes.large
+                )
+        } else {
+            Modifier.background(colors.surface)
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(GenesysTheme.colors.surface)
-                .border(
-                    width = GenesysTheme.strokes.thin,
-                    color = GenesysTheme.colors.outlineVariant,
-                    shape = GenesysTheme.shapes.large
-                )
+                .then(frameModifier)
                 .padding(resolvedContentPadding),
             content = content
         )
