@@ -1,10 +1,11 @@
 package com.genesys.feature.notebook.library
 
-import com.genesys.core.navigation.Route
-
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,14 +16,18 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
+import com.genesys.core.designsystem.component.GenesysDivider
+import com.genesys.core.designsystem.component.GenesysPageFrame
 import com.genesys.core.designsystem.component.GenesysPanel
-import com.genesys.core.designsystem.component.GenesysPanelTone
 import com.genesys.core.designsystem.component.GenesysPrimaryButton
 import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
@@ -30,6 +35,7 @@ import com.genesys.core.domain.repository.notebook.NotebookPageRepository
 import com.genesys.core.domain.repository.notebook.NotebookRepository
 import com.genesys.core.model.notebook.Notebook
 import com.genesys.core.model.notebook.NotebookPage
+import com.genesys.core.navigation.Route
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,155 +125,298 @@ fun NotebookLibraryRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .background(GenesysTheme.colors.surfaceDim)
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.statusBarsPadding()
-            ) {
-                GenesysText(
-                    text = "Notebook Library",
-                    style = GenesysTheme.typography.titleLarge,
-                    color = GenesysTheme.colors.primary
-                )
-                GenesysText(
-                    text = "This route now opens real notebooks and quick pages from local storage instead of a sample host.",
-                    style = GenesysTheme.typography.bodyLarge,
-                    color = GenesysTheme.colors.outline
+    GenesysPageFrame(modifier = modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(GenesysTheme.colors.surface)
+                .statusBarsPadding(),
+            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.md)
+        ) {
+            item(key = "header") {
+                NotebookLibraryHeader(
+                    title = "Notebook Library",
+                    subtitle = "Notebooks and quick pages"
                 )
             }
-        }
 
-        item(key = "actions") {
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                GenesysPrimaryButton(
-                    text = "New notebook",
-                    onClick = {
-                        viewModel.createNotebook { pageId, bookId ->
-                            onOpenNotebook(Route.NotebookEditor(pageId = pageId, bookId = bookId))
-                        }
-                    }
-                )
-                GenesysPrimaryButton(
-                    text = "Quick page",
-                    onClick = {
-                        viewModel.createQuickPage { pageId ->
-                            onOpenNotebook(Route.NotebookEditor(pageId = pageId))
-                        }
-                    }
-                )
-            }
-        }
-
-        if (uiState.isLoading) {
-            item(key = "loading") {
-                GenesysPanel(
+            item(key = "actions") {
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    tone = GenesysPanelTone.Raised,
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                    horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
                 ) {
-                    GenesysText(
-                        text = "Loading notebooks",
-                        style = GenesysTheme.typography.titleMedium
-                    )
-                }
-            }
-        }
+                    GenesysPanel(
+                        modifier = Modifier.weight(1f),
+                        tone = com.genesys.core.designsystem.component.GenesysPanelTone.Heavy,
+                        onClick = {
+                            viewModel.createNotebook { pageId, bookId ->
+                                onOpenNotebook(Route.NotebookEditor(pageId = pageId, bookId = bookId))
+                            }
+                        },
+                        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
+                    ) {
+                        Image(
+                            painter = painterResource(id = com.genesys.core.designsystem.R.drawable.ic_notebook),
+                            contentDescription = "New notebook",
+                            colorFilter = ColorFilter.tint(GenesysTheme.colors.onPrimaryContainer)
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)) {
+                            GenesysText(
+                                text = "New notebook",
+                                style = GenesysTheme.typography.titleMedium,
+                                color = GenesysTheme.colors.onPrimaryContainer
+                            )
+                            GenesysText(
+                                text = "Blank notebook",
+                                style = GenesysTheme.typography.bodySmall,
+                                color = GenesysTheme.colors.onPrimaryContainer.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
 
-        items(
-            items = uiState.notebooks,
-            key = { notebook -> notebook.id }
-        ) { notebook ->
-            GenesysPanel(
-                modifier = Modifier.fillMaxWidth(),
-                tone = GenesysPanelTone.Raised,
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                onClick = {
-                    viewModel.openNotebook(notebook.id) { pageId, bookId ->
-                        onOpenNotebook(Route.NotebookEditor(pageId = pageId, bookId = bookId))
+                    GenesysPanel(
+                        modifier = Modifier.weight(1f),
+                        tone = com.genesys.core.designsystem.component.GenesysPanelTone.Raised,
+                        onClick = {
+                            viewModel.createQuickPage { pageId ->
+                                onOpenNotebook(Route.NotebookEditor(pageId = pageId))
+                            }
+                        },
+                        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
+                    ) {
+                        Image(
+                            painter = painterResource(id = com.genesys.core.designsystem.R.drawable.ic_book_open),
+                            contentDescription = "Quick page",
+                            colorFilter = ColorFilter.tint(GenesysTheme.colors.primary)
+                        )
+                        Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)) {
+                            GenesysText(
+                                text = "Quick page",
+                                style = GenesysTheme.typography.titleMedium,
+                                color = GenesysTheme.colors.onSurface
+                            )
+                            GenesysText(
+                                text = "Standalone note",
+                                style = GenesysTheme.typography.bodySmall,
+                                color = GenesysTheme.colors.outline
+                            )
+                        }
                     }
                 }
-            ) {
-                GenesysText(
-                    text = notebook.title,
-                    style = GenesysTheme.typography.titleMedium
-                )
-                GenesysText(
-                    text = "${notebook.pageIds.size} page(s)",
-                    style = GenesysTheme.typography.bodyMedium,
-                    color = GenesysTheme.colors.outline
-                )
             }
-        }
 
-        items(
-            items = uiState.quickPages,
-            key = { page -> page.id }
-        ) { page ->
-            GenesysPanel(
-                modifier = Modifier.fillMaxWidth(),
-                tone = GenesysPanelTone.Raised,
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                onClick = { onOpenNotebook(Route.NotebookEditor(pageId = page.id)) }
-            ) {
-                GenesysText(
-                    text = "Quick page",
-                    style = GenesysTheme.typography.titleMedium
-                )
-                GenesysText(
-                    text = page.id,
-                    style = GenesysTheme.typography.bodyMedium,
-                    color = GenesysTheme.colors.outline
-                )
-            }
-        }
+            when {
+                uiState.isLoading -> {
+                    item(key = "loading") {
+                        NotebookLibraryStatusPanel(
+                            title = "Loading notebooks",
+                            body = "Gathering saved notebooks and standalone pages from local storage."
+                        )
+                    }
+                }
 
-        if (!uiState.isLoading && uiState.notebooks.isEmpty() && uiState.quickPages.isEmpty()) {
-            item(key = "empty") {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(width = 1.dp, color = GenesysTheme.colors.outline)
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    GenesysText(
-                        text = "No notebooks yet",
-                        style = GenesysTheme.typography.titleMedium
-                    )
-                    GenesysText(
-                        text = "Create a notebook or quick page to open the editor with a real page route.",
-                        style = GenesysTheme.typography.bodyMedium,
-                        color = GenesysTheme.colors.outline
-                    )
+                uiState.notebooks.isEmpty() && uiState.quickPages.isEmpty() -> {
+                    item(key = "empty") {
+                        NotebookLibraryStatusPanel(
+                            title = "No notebooks yet",
+                            body = "Create a notebook or quick page to open the editor with a real page route."
+                        )
+                    }
+                }
+
+                else -> {
+                    if (uiState.notebooks.isNotEmpty()) {
+                        item(key = "notebooks-header") {
+                            NotebookLibraryGroupHeader(
+                                title = "Notebooks",
+                                count = uiState.notebooks.size
+                            )
+                        }
+                        items(
+                            items = uiState.notebooks,
+                            key = { notebook -> notebook.id }
+                        ) { notebook ->
+                            NotebookRow(
+                                title = notebook.title,
+                                meta = "${notebook.pageIds.size} page(s)",
+                                onClick = {
+                                    viewModel.openNotebook(notebook.id) { pageId, bookId ->
+                                        onOpenNotebook(Route.NotebookEditor(pageId = pageId, bookId = bookId))
+                                    }
+                                }
+                            )
+                            GenesysDivider()
+                        }
+                    }
+
+                    if (uiState.quickPages.isNotEmpty()) {
+                        item(key = "quick-pages-header") {
+                            NotebookLibraryGroupHeader(
+                                title = "Quick pages",
+                                count = uiState.quickPages.size
+                            )
+                        }
+                        items(
+                            items = uiState.quickPages,
+                            key = { page -> page.id }
+                        ) { page ->
+                            NotebookRow(
+                                title = "Quick page",
+                                meta = page.id,
+                                onClick = { onOpenNotebook(Route.NotebookEditor(pageId = page.id)) }
+                            )
+                            GenesysDivider()
+                        }
+                    }
                 }
             }
         }
+    }
+}
 
-        item(key = "footer") {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(width = 1.dp, color = GenesysTheme.colors.outline)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                GenesysText(
-                    text = "Baseline ready for porting",
-                    style = GenesysTheme.typography.titleMedium
+@Composable
+private fun NotebookLibraryHeader(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .padding(GenesysTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
+    ) {
+        GenesysText(
+            text = title,
+            style = GenesysTheme.typography.titleLarge,
+            color = GenesysTheme.colors.onSurface
+        )
+        GenesysText(
+            text = subtitle,
+            style = GenesysTheme.typography.bodySmall,
+            color = GenesysTheme.colors.outline
+        )
+        GenesysDivider()
+        GenesysText(
+            text = "Open a notebook at its current page or jump into a standalone quick page.",
+            style = GenesysTheme.typography.bodySmall,
+            color = GenesysTheme.colors.outline
+        )
+    }
+}
+
+@Composable
+private fun NotebookLibraryGroupHeader(
+    title: String,
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            GenesysText(
+                text = title,
+                style = GenesysTheme.typography.titleMedium,
+                color = GenesysTheme.colors.onSurface
+            )
+            GenesysText(
+                text = count.toString(),
+                style = GenesysTheme.typography.labelMedium,
+                color = GenesysTheme.colors.outline
+            )
+        }
+        GenesysDivider()
+    }
+}
+
+@Composable
+private fun NotebookLibraryStatusPanel(
+    title: String,
+    body: String,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(
+                width = GenesysTheme.strokes.thin,
+                color = GenesysTheme.colors.outlineVariant,
+                shape = GenesysTheme.shapes.small
+            )
+            .padding(GenesysTheme.spacing.sm),
+        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs)
+    ) {
+        GenesysText(
+            text = title,
+            style = GenesysTheme.typography.titleMedium,
+            color = GenesysTheme.colors.onSurface
+        )
+        GenesysText(
+            text = body,
+            style = GenesysTheme.typography.bodySmall,
+            color = GenesysTheme.colors.outline
+        )
+    }
+}
+
+@Composable
+private fun NotebookRow(
+    title: String,
+    meta: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(GenesysTheme.shapes.small)
+            .clickable(onClick = onClick)
+            .padding(vertical = GenesysTheme.spacing.xs),
+        horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
+        ) {
+            GenesysText(
+                text = title,
+                style = GenesysTheme.typography.titleMedium,
+                color = GenesysTheme.colors.onSurface
+            )
+            GenesysText(
+                text = meta,
+                style = GenesysTheme.typography.bodySmall,
+                color = GenesysTheme.colors.outline
+            )
+        }
+        Box(
+            modifier = Modifier
+                .clip(GenesysTheme.shapes.small)
+                .border(
+                    width = GenesysTheme.strokes.thin,
+                    color = GenesysTheme.colors.outlineVariant,
+                    shape = GenesysTheme.shapes.small
                 )
-                GenesysText(
-                    text = "The library now opens concrete page and book ids. Remaining notable drift is deeper in editor data flow, exports, and page management.",
-                    style = GenesysTheme.typography.bodyMedium,
-                    color = GenesysTheme.colors.outline
-                )
-            }
+                .clickable(onClick = onClick)
+                .padding(GenesysTheme.spacing.xs)
+        ) {
+            Image(
+                painter = painterResource(id = com.genesys.core.designsystem.R.drawable.ic_chevron_right),
+                contentDescription = "Open",
+                colorFilter = ColorFilter.tint(GenesysTheme.colors.onSurface)
+            )
         }
     }
 }

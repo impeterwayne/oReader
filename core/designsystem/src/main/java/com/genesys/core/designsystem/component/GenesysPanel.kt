@@ -19,7 +19,8 @@ import com.genesys.core.designsystem.theme.GenesysTheme
 enum class GenesysPanelTone {
     Frame,
     Raised,
-    Heavy
+    Heavy,
+    Flat
 }
 
 @Composable
@@ -33,13 +34,19 @@ fun GenesysPanel(
 ) {
     val colors = GenesysTheme.colors
     val strokes = GenesysTheme.strokes
-    val shape = GenesysTheme.shapes.medium
+    val shape = when (tone) {
+        GenesysPanelTone.Frame,
+        GenesysPanelTone.Flat -> GenesysTheme.shapes.large
+        GenesysPanelTone.Raised,
+        GenesysPanelTone.Heavy -> GenesysTheme.shapes.medium
+    }
     val resolvedContentPadding = contentPadding ?: PaddingValues(GenesysTheme.spacing.md)
     val interactionSource = remember { MutableInteractionSource() }
     val backgroundColor: Color
     val borderColor: Color
     val borderWidth = when (tone) {
-        GenesysPanelTone.Frame -> strokes.thin
+        GenesysPanelTone.Frame,
+        GenesysPanelTone.Flat,
         GenesysPanelTone.Raised -> strokes.thin
         GenesysPanelTone.Heavy -> strokes.medium
     }
@@ -56,6 +63,10 @@ fun GenesysPanel(
         GenesysPanelTone.Heavy -> {
             backgroundColor = colors.primaryContainer
             borderColor = colors.primary
+        }
+        GenesysPanelTone.Flat -> {
+            backgroundColor = colors.surfaceContainerLowest
+            borderColor = colors.outlineVariant
         }
     }
 
