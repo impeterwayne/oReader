@@ -98,8 +98,8 @@ data class KoreaderArtifact(
 
 val koreaderArtifacts = listOf(
     KoreaderArtifact("arm64-v8a", "arm64", "aa8c1f8330a2bddd65b8725dbb8dd9f86c6485eae4bfe17dc1160a31641a3ba8"),
-    KoreaderArtifact("armeabi-v7a", "arm", null), // TODO: Add SHA256 checksum
-    KoreaderArtifact("x86", "x86", null) // TODO: Add SHA256 checksum
+    KoreaderArtifact("armeabi-v7a", "arm", "e414dd0b8ad210efe8920a521d608a733715c3c18431839838e32186355e43cd"),
+    KoreaderArtifact("x86", "x86", "9cb32ae7fd52bb292607a4d8b64a813c25ede2d16ba389d298a858648bd367cb")
 )
 
 val embeddedAssetsDir = layout.buildDirectory.dir("generated/embeddedKoreader/main/assets")
@@ -109,12 +109,12 @@ val embeddedJniLibsDir = layout.buildDirectory.dir("generated/embeddedKoreader/m
 val downloadTasks = koreaderArtifacts.map { artifact ->
     val artifactName = "koreader-android-${artifact.arch}-$koreaderReleaseTag.apk"
     val artifactUrl = "https://github.com/koreader/koreader/releases/download/$koreaderReleaseTag/$artifactName"
-    val outputFile = layout.buildDirectory.file("embeddedKoreader/downloads/$artifactName")
+    val targetFile = layout.buildDirectory.file("embeddedKoreader/downloads/$artifactName")
 
     tasks.register<DownloadKoreaderRuntimeTask>("downloadKoreader${artifact.abi.replace("-", "")}") {
         url.set(artifactUrl)
         sha256.set(artifact.sha256 ?: "")
-        outputFile.set(outputFile)
+        outputFile.set(targetFile)
     }
 }
 
@@ -153,7 +153,7 @@ val extractKoreaderRuntimeJniLibs = tasks.register<Sync>("extractKoreaderRuntime
 }
 
 android {
-    namespace = "org.koreader.launcher"
+    namespace = "com.genesys.feature.koreader"
 
     buildFeatures {
         buildConfig = true
@@ -162,8 +162,8 @@ android {
 
     defaultConfig {
         ndk {
-            // Support all ABIs provided by KOReader (arm, arm64, x86)
-            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a", "x86"))
+            // Support ABIs provided by KOReader (arm, arm64)
+            abiFilters.addAll(listOf("arm64-v8a", "armeabi-v7a"))
         }
 
         buildConfigField("String", "APP_NAME", "\"KOReader\"")
@@ -176,6 +176,14 @@ android {
 
     androidResources {
         noCompress += "7z"
+    }
+
+    buildTypes {
+        getByName("debug") {
+            ndk {
+                abiFilters.add("x86")
+            }
+        }
     }
 
     sourceSets {

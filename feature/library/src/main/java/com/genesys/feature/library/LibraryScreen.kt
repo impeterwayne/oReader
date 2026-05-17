@@ -17,15 +17,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.height
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
@@ -49,7 +45,7 @@ import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.core.model.library.Book
 import com.genesys.core.model.library.BookSource
 import com.genesys.core.model.library.LibraryFolder
-import com.genesys.feature.koreader.host.KoreaderActivity
+import com.genesys.feature.koreader.KoReaderActivity as KoreaderMainActivity
 import com.hjq.permissions.dsl.XXPermissionsExt
 import com.hjq.permissions.permission.special.ManageExternalStoragePermission
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -68,9 +64,9 @@ fun LibraryScreenRoute(
         when (sideEffect) {
             is LibrarySideEffect.OpenBook -> {
                 context.startActivity(
-                    KoreaderActivity.LaunchMode.toIntent(
+                    KoreaderMainActivity.openDocumentIntent(
                         context,
-                        KoreaderActivity.LaunchMode.OpenDocument(sideEffect.filePath)
+                        sideEffect.filePath
                     )
                 )
             }

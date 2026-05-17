@@ -5,7 +5,7 @@ import android.os.Build
 import com.onyx.android.sdk.rx.RxManager
 import com.tencent.mmkv.MMKV
 import dagger.hilt.android.HiltAndroidApp
-import org.koreader.launcher.MainApp
+import com.genesys.feature.koreader.MainApp
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import timber.log.Timber
 

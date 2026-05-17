@@ -8,13 +8,7 @@
 
     <application>
         <activity
-            android:name="com.genesys.feature.koreader.host.KoreaderActivity"
-            android:label="@string/koreader_activity_label"
-            android:configChanges="orientation|screenSize|keyboardHidden"
-            android:exported="false" />
-
-        <activity
-            android:name="org.koreader.launcher.MainActivity"
+            android:name=".KoReaderActivity"
             android:label="@string/koreader_activity_label"
             android:process=":koreader"
             android:configChanges="colorMode|density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
@@ -30,7 +24,7 @@
         </activity>
 
         <activity
-            android:name="org.koreader.launcher.CrashReportActivity"
+            android:name=".CrashReportActivity"
             android:process=":koreader"
             android:exported="false"
             android:label="CrashReport"
