@@ -2,13 +2,9 @@ package com.genesys.feature.library
 
 import android.app.Activity
 import android.content.Context
-import android.net.Uri
-import android.provider.DocumentsContract
 import android.text.format.DateUtils
 import android.text.format.Formatter
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -23,13 +19,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -42,8 +38,7 @@ import com.genesys.core.designsystem.component.GenesysText
 import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.core.model.library.Book
 import com.genesys.core.model.library.BookSource
-import com.genesys.core.model.library.LibraryFolder
-import com.genesys.feature.koreader.KoReaderActivity as KoreaderMainActivity
+import org.koreader.launcher.KoReaderActivity as KoreaderMainActivity
 import com.hjq.permissions.dsl.XXPermissionsExt
 import com.hjq.permissions.permission.special.ManageExternalStoragePermission
 import org.orbitmvi.orbit.compose.collectSideEffect
@@ -51,11 +46,12 @@ import kotlin.math.roundToInt
 
 @Composable
 fun LibraryScreenRoute(
-    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
+    onOpenSettings: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val activity = context.findActivity()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     viewModel.collectSideEffect { sideEffect ->
@@ -76,7 +72,23 @@ fun LibraryScreenRoute(
 
     LibraryScreen(
         state = uiState,
-        onOpenSettings = onOpenSettings,
+        onOpenFileManager = {
+            activity?.let {
+                requestLibraryFolderAccess(
+                    activity = it,
+                    onGranted = {
+                        context.startActivity(KoreaderMainActivity.fileManagerIntent(context))
+                    },
+                    onDenied = {
+                        Toast.makeText(
+                            context,
+                            "Storage permission is required before opening the file manager.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+            }
+        },
         onRefresh = {
             viewModel.onAction(LibraryAction.RefreshLibrary)
         },
@@ -89,63 +101,7 @@ fun LibraryScreenRoute(
         onRemoveBook = { bookId ->
             viewModel.onAction(LibraryAction.RemoveBook(bookId))
         },
-        modifier = modifier
-    )
-}
-
-@Composable
-fun LibrarySettingsRoute(
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-    viewModel: LibraryViewModel = hiltViewModel()
-) {
-    val context = LocalContext.current
-    val activity = context.findActivity()
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val openTreeLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree()
-    ) { treeUri ->
-        treeUri?.let { uri ->
-            viewModel.onAction(LibraryAction.AddLibraryFolder(uri))
-        }
-    }
-
-    viewModel.collectSideEffect { sideEffect ->
-        when (sideEffect) {
-            is LibrarySideEffect.OpenBook -> Unit
-            is LibrarySideEffect.ShowMessage -> {
-                Toast.makeText(context, sideEffect.message, Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    LibrarySettingsScreen(
-        state = uiState,
-        onBack = onBack,
-        onAddLibraryFolder = {
-            activity?.let {
-                requestLibraryFolderAccess(
-                    activity = it,
-                    onGranted = { openTreeLauncher.launch(null) },
-                    onDenied = {
-                        Toast.makeText(
-                            context,
-                            "Storage permission is required before picking a folder.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                )
-            }
-        },
-        onRemoveLibraryFolder = { folderId ->
-            viewModel.onAction(LibraryAction.RemoveLibraryFolder(folderId))
-        },
-        onRemoveInvalidFolders = {
-            viewModel.onAction(LibraryAction.RemoveInvalidFolders)
-        },
-        onRefresh = {
-            viewModel.onAction(LibraryAction.RefreshLibrary)
-        },
+        onOpenSettings = onOpenSettings,
         modifier = modifier
     )
 }
@@ -153,11 +109,12 @@ fun LibrarySettingsRoute(
 @Composable
 private fun LibraryScreen(
     state: LibraryUiState,
-    onOpenSettings: () -> Unit,
+    onOpenFileManager: () -> Unit,
     onRefresh: () -> Unit,
     onSelectPage: (Int) -> Unit,
     onOpenBook: (Book) -> Unit,
     onRemoveBook: (String) -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     GenesysPageFrame(
@@ -173,13 +130,9 @@ private fun LibraryScreen(
         ) {
             LibraryHeader(
                 title = "Reader Library",
-                subtitle = "Paginated shelf",
-                primaryActionIconRes = com.genesys.core.designsystem.R.drawable.ic_settings,
-                primaryActionContentDescription = "Settings",
-                onPrimaryAction = onOpenSettings,
-                secondaryActionIconRes = com.genesys.core.designsystem.R.drawable.ic_refresh,
-                secondaryActionContentDescription = "Refresh",
-                onSecondaryAction = onRefresh
+                actionIconRes = com.genesys.core.designsystem.R.drawable.ic_settings,
+                actionContentDescription = stringResource(id = R.string.settings),
+                onAction = onOpenSettings
             )
 
             LibraryMetaRow(
@@ -189,11 +142,7 @@ private fun LibraryScreen(
                     "${state.books.size} books"
                 },
                 secondaryText = buildString {
-                    val validFolderCount = state.selectedFolders.count { it.isValid }
-                    append(validFolderCount)
-                    append(" folder")
-                    if (validFolderCount != 1) append('s')
-                    append(" active")
+                    append("KOReader library")
                     if (state.totalPages > 0) {
                         append(" · Page ")
                         append(state.selectedPageIndex + 1)
@@ -201,6 +150,11 @@ private fun LibraryScreen(
                         append(state.totalPages)
                     }
                 }
+            )
+
+            GenesysPrimaryButton(
+                text = "Open KOReader file manager",
+                onClick = onOpenFileManager
             )
 
             if (state.totalPages > 1) {
@@ -214,21 +168,21 @@ private fun LibraryScreen(
                 state.isLoading -> {
                     LibraryStatusPanel(
                         title = "Loading library",
-                        body = "Scanning selected folders and reading KOReader progress."
+                        body = "Refreshing your KOReader library and reading progress."
                     )
                 }
 
                 state.books.isEmpty() && state.selectedFolders.isEmpty() -> {
                     LibraryStatusPanel(
-                        title = "No folders selected",
-                        body = "Open settings to add one or more folders before scanning your books."
+                        title = "Library is empty",
+                        body = "Open the KOReader file manager to choose books and build your library."
                     )
                 }
 
                 state.books.isEmpty() -> {
                     LibraryStatusPanel(
                         title = "No books found",
-                        body = "Selected folders are ready, but no supported books were found yet. Managed copies still appear here when imported."
+                        body = "No supported books were found yet. Open the KOReader file manager to browse and add readable content."
                     )
                 }
 
@@ -269,62 +223,11 @@ private fun LibraryScreen(
 }
 
 @Composable
-private fun LibrarySettingsScreen(
-    state: LibraryUiState,
-    onBack: () -> Unit,
-    onAddLibraryFolder: () -> Unit,
-    onRemoveLibraryFolder: (String) -> Unit,
-    onRemoveInvalidFolders: () -> Unit,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    GenesysPageFrame(
-        modifier = modifier,
-        contentPadding = PaddingValues(GenesysTheme.spacing.sm)
-    ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(GenesysTheme.colors.surface)
-                .statusBarsPadding(),
-            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
-        ) {
-            item {
-                LibraryHeader(
-                    title = "Library Settings",
-                    subtitle = "Folder management",
-                    primaryActionIconRes = com.genesys.core.designsystem.R.drawable.ic_chevron_left,
-                    primaryActionContentDescription = "Back",
-                    onPrimaryAction = onBack,
-                    secondaryActionIconRes = com.genesys.core.designsystem.R.drawable.ic_refresh,
-                    secondaryActionContentDescription = "Refresh",
-                    onSecondaryAction = onRefresh
-                )
-            }
-
-            item {
-                LibrarySummaryPanel(
-                    state = state,
-                    onAddLibraryFolder = onAddLibraryFolder,
-                    onRemoveLibraryFolder = onRemoveLibraryFolder,
-                    onRemoveInvalidFolders = onRemoveInvalidFolders,
-                    onRefresh = onRefresh
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun LibraryHeader(
     title: String,
-    subtitle: String,
-    primaryActionIconRes: Int,
-    primaryActionContentDescription: String,
-    onPrimaryAction: () -> Unit,
-    secondaryActionIconRes: Int,
-    secondaryActionContentDescription: String,
-    onSecondaryAction: () -> Unit,
+    actionIconRes: Int,
+    actionContentDescription: String,
+    onAction: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -341,7 +244,7 @@ private fun LibraryHeader(
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Column(
                 modifier = Modifier.weight(1f),
@@ -352,27 +255,12 @@ private fun LibraryHeader(
                     style = GenesysTheme.typography.titleLarge,
                     color = GenesysTheme.colors.onSurface
                 )
-                GenesysText(
-                    text = subtitle,
-                    style = GenesysTheme.typography.bodySmall,
-                    color = GenesysTheme.colors.outline
-                )
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xs),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                HeaderActionButton(
-                    iconRes = secondaryActionIconRes,
-                    contentDescription = secondaryActionContentDescription,
-                    onClick = onSecondaryAction
-                )
-                HeaderActionButton(
-                    iconRes = primaryActionIconRes,
-                    contentDescription = primaryActionContentDescription,
-                    onClick = onPrimaryAction
-                )
-            }
+            HeaderActionButton(
+                iconRes = actionIconRes,
+                contentDescription = actionContentDescription,
+                onClick = onAction
+            )
         }
     }
 }
@@ -475,152 +363,6 @@ private fun LibraryPaginationRow(
             contentDescription = "Next Page",
             onClick = { onSelectPage(state.selectedPageIndex + 1) },
             enabled = state.selectedPageIndex < state.totalPages - 1
-        )
-    }
-}
-
-@Composable
-private fun LibrarySummaryPanel(
-    state: LibraryUiState,
-    onAddLibraryFolder: () -> Unit,
-    onRemoveLibraryFolder: (String) -> Unit,
-    onRemoveInvalidFolders: () -> Unit,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val validFolderCount = state.selectedFolders.count { it.isValid }
-
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .border(
-                width = GenesysTheme.strokes.thin,
-                color = GenesysTheme.colors.outlineVariant,
-                shape = GenesysTheme.shapes.small
-            )
-            .padding(GenesysTheme.spacing.sm),
-        verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)
-    ) {
-        GenesysText(
-            text = if (state.books.isEmpty()) {
-                "Library waiting for books"
-            } else {
-                "${state.books.size} books in your library"
-            },
-            style = GenesysTheme.typography.titleMedium,
-            color = GenesysTheme.colors.onSurface
-        )
-        GenesysText(
-            text = buildString {
-                append(validFolderCount)
-                append(" active folder")
-                if (validFolderCount != 1) {
-                    append('s')
-                }
-                append(" selected for scanning")
-                if (state.invalidFolders.isNotEmpty()) {
-                    append(". ")
-                    append(state.invalidFolders.size)
-                    append(" unavailable folder")
-                    if (state.invalidFolders.size != 1) {
-                        append('s')
-                    }
-                    append(" can be removed.")
-                }
-            },
-            style = GenesysTheme.typography.bodySmall,
-            color = GenesysTheme.colors.outline
-        )
-
-        if (state.selectedFolders.isEmpty()) {
-            LibraryStatusPanel(
-                title = "No folders yet",
-                body = "Add folder to build reader library from selected locations."
-            )
-        } else {
-            Column(verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)) {
-                state.selectedFolders.forEachIndexed { index, folder ->
-                    if (index > 0) {
-                        GenesysDivider()
-                    }
-                    FolderRow(
-                        folder = folder,
-                        onRemoveFolder = { onRemoveLibraryFolder(folder.id) }
-                    )
-                }
-            }
-        }
-
-        Row(horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm)) {
-            GenesysPrimaryButton(
-                text = "Add folder",
-                onClick = onAddLibraryFolder
-            )
-            if (state.invalidFolders.isNotEmpty()) {
-                GenesysSecondaryButton(
-                    text = "Clear invalid",
-                    onClick = onRemoveInvalidFolders
-                )
-            }
-            GenesysSecondaryButton(
-                text = "Refresh",
-                onClick = onRefresh
-            )
-        }
-    }
-}
-
-@Composable
-private fun FolderRow(
-    folder: LibraryFolder,
-    onRemoveFolder: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    val isValid = folder.isValid
-    val statusLabel = if (isValid) "Selected" else folder.invalidReason ?: "Unavailable"
-    val pathPreview = runCatching {
-        DocumentsContract.getTreeDocumentId(Uri.parse(folder.treeUri))
-            .substringAfter(':', folder.displayName)
-    }.getOrDefault(folder.displayName)
-
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = GenesysTheme.spacing.xs),
-        horizontalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.sm),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(GenesysTheme.spacing.xxs)
-        ) {
-            GenesysText(
-                text = folder.displayName,
-                style = GenesysTheme.typography.titleSmall,
-                color = if (isValid) {
-                    GenesysTheme.colors.onSurface
-                } else {
-                    GenesysTheme.colors.primary
-                }
-            )
-            GenesysText(
-                text = statusLabel,
-                style = GenesysTheme.typography.bodySmall,
-                color = if (isValid) {
-                    GenesysTheme.colors.outline
-                } else {
-                    GenesysTheme.colors.primary
-                }
-            )
-            GenesysText(
-                text = pathPreview,
-                style = GenesysTheme.typography.bodySmall,
-                color = GenesysTheme.colors.outline
-            )
-        }
-        GenesysSecondaryButton(
-            text = "Remove",
-            onClick = onRemoveFolder
         )
     }
 }

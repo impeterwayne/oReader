@@ -11,7 +11,6 @@ import androidx.navigation3.ui.NavDisplay
 import com.genesys.core.navigation.AppNavigator
 import com.genesys.core.navigation.Route
 import com.genesys.feature.library.LibraryScreenRoute
-import com.genesys.feature.library.LibrarySettingsRoute
 import androidx.compose.animation.togetherWith
 
 @Composable
@@ -23,17 +22,15 @@ fun LibraryGraph(
     val entries = entryProvider<NavKey> {
         entry<Route.Reader> {
             LibraryScreenRoute(
-                onOpenSettings = {
-                    navigator.navigate(Route.LibrarySettings)
-                },
-                modifier = modifier
+                modifier = modifier,
+                onOpenSettings = { navigator.navigate(Route.Settings) }
             )
         }
-
-        entry<Route.LibrarySettings> {
-            LibrarySettingsRoute(
-                onBack = navigator::popIfPossible,
-                modifier = modifier
+        
+        entry<Route.Settings> {
+            com.genesys.feature.library.settings.SettingsScreenRoute(
+                modifier = modifier,
+                onBackClick = { navigator.popIfPossible() }
             )
         }
     }

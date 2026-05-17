@@ -12,10 +12,6 @@ sealed interface Route : NavKey, Parcelable {
 
     @Serializable
     @Parcelize
-    data object LibrarySettings : Route
-
-    @Serializable
-    @Parcelize
     data object Notebook : Route
 
     @Serializable
@@ -30,4 +26,8 @@ sealed interface Route : NavKey, Parcelable {
     data class NotebookPages(
         val bookId: String
     ) : Route
+
+    @Serializable
+    @Parcelize
+    data object Settings : Route
 }

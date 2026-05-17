@@ -1,14 +1,10 @@
 package com.genesys.feature.library
 
-import android.net.Uri
 import com.genesys.core.common.base.BaseViewModel
-import com.genesys.core.domain.usecase.library.AddLibraryFolderResult
 import com.genesys.core.domain.usecase.library.GetLibrarySnapshotResult
 import com.genesys.core.domain.usecase.library.LibraryUseCases
 import com.genesys.core.domain.usecase.library.OpenLibraryBookResult
-import com.genesys.core.domain.usecase.library.RemoveInvalidFoldersResult
 import com.genesys.core.domain.usecase.library.RemoveLibraryBookResult
-import com.genesys.core.domain.usecase.library.RemoveLibraryFolderResult
 import com.genesys.core.model.library.Book
 import com.genesys.core.model.library.LibrarySnapshot
 import com.genesys.core.model.library.OpenBookResult
@@ -43,9 +39,6 @@ class LibraryViewModel @Inject constructor(
             LibraryAction.LoadLibrary -> loadLibrary()
             LibraryAction.RefreshLibrary -> refreshLibrary()
             LibraryAction.LibraryChangedExternally -> refreshLibrary()
-            is LibraryAction.AddLibraryFolder -> addLibraryFolder(action.folderUri)
-            is LibraryAction.RemoveLibraryFolder -> removeLibraryFolder(action.folderId)
-            LibraryAction.RemoveInvalidFolders -> removeInvalidFolders()
             is LibraryAction.SelectPage -> selectPage(action.pageIndex)
             is LibraryAction.OpenBook -> openBook(action.book)
             is LibraryAction.RemoveBook -> removeBook(action.bookId)
@@ -77,59 +70,6 @@ class LibraryViewModel @Inject constructor(
         }
     }
 
-    private fun addLibraryFolder(folderUri: Uri) = intent {
-        reduce { state.copy(isLoading = true) }
-        when (val result = libraryUseCases.addLibraryFolderUseCase(folderUri)) {
-            is AddLibraryFolderResult.Added -> {
-                reduce { state.withSnapshot(result.snapshot, isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Library folder added"))
-            }
-            is AddLibraryFolderResult.AlreadyAdded -> {
-                reduce { state.withSnapshot(result.snapshot, isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Library folder already added"))
-            }
-            is AddLibraryFolderResult.Failure -> {
-                reduce { state.copy(isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Could not add that folder"))
-            }
-        }
-    }
-
-    private fun removeLibraryFolder(folderId: String) = intent {
-        reduce { state.copy(isLoading = true) }
-        when (val result = libraryUseCases.removeLibraryFolderUseCase(folderId)) {
-            is RemoveLibraryFolderResult.Removed -> {
-                reduce { state.withSnapshot(result.snapshot, isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Removed ${result.folder.displayName}"))
-            }
-            is RemoveLibraryFolderResult.NotFound -> {
-                reduce { state.withSnapshot(result.snapshot, isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Folder already removed"))
-            }
-            is RemoveLibraryFolderResult.Failure -> {
-                reduce { state.copy(isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Could not remove that folder"))
-            }
-        }
-    }
-
-    private fun removeInvalidFolders() = intent {
-        reduce { state.copy(isLoading = true) }
-        when (val result = libraryUseCases.removeLibraryInvalidFoldersUseCase()) {
-            is RemoveInvalidFoldersResult.Success -> {
-                reduce { state.withSnapshot(result.snapshot, isLoading = false) }
-                postSideEffect(
-                    LibrarySideEffect.ShowMessage(
-                        if (result.removed) "Removed invalid folders" else "No invalid folders to remove"
-                    )
-                )
-            }
-            is RemoveInvalidFoldersResult.Failure -> {
-                reduce { state.copy(isLoading = false) }
-                postSideEffect(LibrarySideEffect.ShowMessage("Could not clean unavailable folders"))
-            }
-        }
-    }
 
     private fun selectPage(pageIndex: Int) = intent {
         reduce {

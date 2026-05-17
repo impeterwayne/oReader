@@ -19,7 +19,8 @@ fun GenesysPrimaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues? = null
+    contentPadding: PaddingValues? = null,
+    allCaps: Boolean = true
 ) {
     val colors = GenesysTheme.colors
     val resolvedContentPadding = contentPadding ?: PaddingValues(
@@ -37,10 +38,11 @@ fun GenesysPrimaryButton(
                 indication = null,
                 onClick = onClick
             )
-            .padding(resolvedContentPadding)
+            .padding(resolvedContentPadding),
+        contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
         GenesysText(
-            text = text.uppercase(Locale.ROOT),
+            text = if (allCaps) text.uppercase(Locale.ROOT) else text,
             style = GenesysTheme.typography.labelLarge,
             color = colors.onPrimary
         )
@@ -52,7 +54,8 @@ fun GenesysSecondaryButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    contentPadding: PaddingValues? = null
+    contentPadding: PaddingValues? = null,
+    allCaps: Boolean = true
 ) {
     val colors = GenesysTheme.colors
     val resolvedContentPadding = contentPadding ?: PaddingValues(
@@ -75,10 +78,11 @@ fun GenesysSecondaryButton(
                 indication = null,
                 onClick = onClick
             )
-            .padding(resolvedContentPadding)
+            .padding(resolvedContentPadding),
+        contentAlignment = androidx.compose.ui.Alignment.Center
     ) {
         GenesysText(
-            text = text.uppercase(Locale.ROOT),
+            text = if (allCaps) text.uppercase(Locale.ROOT) else text,
             style = GenesysTheme.typography.labelLarge,
             color = colors.primary
         )

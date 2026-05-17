@@ -10,7 +10,7 @@ val localProperties = Properties().apply {
 }
 
 val baseUrl = localProperties.getProperty("AI_BASE_URL")
-    ?: "http\\://127.0.0.1\\:20128/v1/"
+    ?: "http://127.0.0.1:20128/v1/"
 val apiKey = localProperties.getProperty("AI_SERVICE_API_KEY")
     ?: "sk-e69a732c4bc1a76a-77h8et-7d631c07"
 

@@ -8,7 +8,7 @@
 
     <application>
         <activity
-            android:name=".KoReaderActivity"
+            android:name="org.koreader.launcher.KoReaderActivity"
             android:label="@string/koreader_activity_label"
             android:process=":koreader"
             android:configChanges="colorMode|density|fontScale|keyboard|keyboardHidden|layoutDirection|locale|mcc|mnc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|touchscreen|uiMode"
@@ -24,7 +24,7 @@
         </activity>
 
         <activity
-            android:name=".CrashReportActivity"
+            android:name="org.koreader.launcher.CrashReportActivity"
             android:process=":koreader"
             android:exported="false"
             android:label="CrashReport"

@@ -3,7 +3,6 @@ package com.genesys.feature.library
 import com.genesys.core.model.library.*
 import com.genesys.core.domain.repository.library.*
 
-import android.net.Uri
 import com.genesys.core.common.base.mvi.Action
 import com.genesys.core.common.base.mvi.SideEffect
 import com.genesys.core.common.base.mvi.UiState
@@ -33,9 +32,6 @@ sealed interface LibraryAction : Action {
     data object LoadLibrary : LibraryAction
     data object RefreshLibrary : LibraryAction
     data object LibraryChangedExternally : LibraryAction
-    data class AddLibraryFolder(val folderUri: Uri) : LibraryAction
-    data class RemoveLibraryFolder(val folderId: String) : LibraryAction
-    data object RemoveInvalidFolders : LibraryAction
     data class SelectPage(val pageIndex: Int) : LibraryAction
     data class OpenBook(val book: Book) : LibraryAction
     data class RemoveBook(val bookId: String) : LibraryAction

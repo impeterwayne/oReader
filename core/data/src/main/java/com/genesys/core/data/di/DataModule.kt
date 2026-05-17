@@ -1,6 +1,7 @@
 package com.genesys.core.data.di
 
 import com.genesys.core.data.repository.ai.AiRepositoryImpl
+import com.genesys.core.data.repository.ai.AiSettingsManager
 import com.genesys.core.data.repository.notebook.NotebookFolderRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookImageRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookKeyValueRepositoryImpl
@@ -9,6 +10,7 @@ import com.genesys.core.data.repository.notebook.NotebookRepositoryImpl
 import com.genesys.core.data.repository.notebook.NotebookStrokeRepositoryImpl
 import com.genesys.core.data.repository.reader.SettingsManager
 import com.genesys.core.domain.repository.ai.AiRepository
+import com.genesys.core.domain.repository.ai.AiSettingsRepository
 import com.genesys.core.domain.repository.notebook.NotebookFolderRepository
 import com.genesys.core.domain.repository.notebook.NotebookImageRepository
 import com.genesys.core.domain.repository.notebook.NotebookKeyValueRepository
@@ -70,4 +72,9 @@ internal interface DataModule {
     fun bindAiRepository(
         impl: AiRepositoryImpl
     ): AiRepository
+
+    @Binds
+    fun bindAiSettingsRepository(
+        impl: AiSettingsManager
+    ): AiSettingsRepository
 }

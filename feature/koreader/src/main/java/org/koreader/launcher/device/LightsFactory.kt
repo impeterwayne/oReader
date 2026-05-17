@@ -1,0 +1,149 @@
+package org.koreader.launcher.device
+
+import timber.log.Timber
+import org.koreader.launcher.device.lights.BoyueS62RootController
+import org.koreader.launcher.device.lights.GenericController
+import org.koreader.launcher.device.lights.OnyxAdbLightsController
+import org.koreader.launcher.device.lights.OnyxC67Controller
+import org.koreader.launcher.device.lights.OnyxColorController
+import org.koreader.launcher.device.lights.OnyxPalma2ProController
+import org.koreader.launcher.device.lights.OnyxSdkLightsController
+import org.koreader.launcher.device.lights.OnyxWarmthController
+import org.koreader.launcher.device.lights.TolinoB300Controller
+import org.koreader.launcher.device.lights.TolinoNtxController
+import org.koreader.launcher.device.lights.TolinoNtxNoWarmthController
+import org.koreader.launcher.device.lights.TolinoRootController
+import java.util.*
+
+object LightsFactory {
+    private const val TAG = "Lights"
+    val lightsController: LightsInterface
+        get() {
+            return when (DeviceInfo.ID) {
+                DeviceInfo.Id.BOYUE_S62,
+                -> {
+                    logController("Boyue S62")
+                    BoyueS62RootController()
+                }
+                DeviceInfo.Id.ONYX_GALILEO2,
+                DeviceInfo.Id.ONYX_GO_COLOR7,
+                DeviceInfo.Id.ONYX_GO6,
+                DeviceInfo.Id.ONYX_GO7,
+                DeviceInfo.Id.ONYX_GO7GEN2,
+                DeviceInfo.Id.ONYX_NOTE_AIR_3C,
+                DeviceInfo.Id.ONYX_NOTE_AIR_4C,
+                DeviceInfo.Id.ONYX_NOTE_AIR_5C,
+                DeviceInfo.Id.ONYX_NOVA_AIR,
+                DeviceInfo.Id.ONYX_PAGE,
+                DeviceInfo.Id.ONYX_PALMA,
+                DeviceInfo.Id.ONYX_PALMA2,
+                DeviceInfo.Id.ONYX_POKE5,
+                DeviceInfo.Id.ONYX_POKE5S,
+                DeviceInfo.Id.ONYX_POKE6,
+                DeviceInfo.Id.ONYX_TAB_ULTRA_C,
+                DeviceInfo.Id.ONYX_TAB_ULTRA_C_PRO,
+                -> {
+                    logController("Onyx Adb")
+                    OnyxAdbLightsController()
+                }
+                DeviceInfo.Id.ONYX_C67,
+                DeviceInfo.Id.ONYX_MAGICBOOK,
+                DeviceInfo.Id.ONYX_MONTECRISTO3,
+                -> {
+                    logController("Onyx C67")
+                    OnyxC67Controller()
+                }
+                DeviceInfo.Id.ONYX_JDREAD,
+                DeviceInfo.Id.ONYX_NOVA3_COLOR,
+                DeviceInfo.Id.TAGUS_GEA,
+                -> {
+                    logController("Onyx Color")
+                    OnyxColorController()
+                }
+                DeviceInfo.Id.ONYX_DARWIN7,
+                DeviceInfo.Id.ONYX_EDISON,
+                DeviceInfo.Id.ONYX_FAUST3,
+                DeviceInfo.Id.ONYX_KON_TIKI2,
+                DeviceInfo.Id.ONYX_LEAF,
+                DeviceInfo.Id.ONYX_LOMONOSOV,
+                DeviceInfo.Id.ONYX_NOTE3,
+                DeviceInfo.Id.ONYX_NOTE_AIR,
+                DeviceInfo.Id.ONYX_NOTE_PRO,
+                DeviceInfo.Id.ONYX_NOVA3,
+                DeviceInfo.Id.ONYX_NOVA_PRO,
+                DeviceInfo.Id.ONYX_POKE2,
+                DeviceInfo.Id.ONYX_POKE3,
+                DeviceInfo.Id.ONYX_POKE_PRO,
+                -> {
+                    logController("Onyx/Qualcomm")
+                    OnyxWarmthController()
+                }
+                DeviceInfo.Id.ONYX_DARWIN5,
+                DeviceInfo.Id.ONYX_DARWIN9,
+                DeviceInfo.Id.ONYX_LEAF2,
+                DeviceInfo.Id.ONYX_LIVINGSTONE3,
+                DeviceInfo.Id.ONYX_NOTE4,
+                DeviceInfo.Id.ONYX_NOTE_AIR2,
+                DeviceInfo.Id.ONYX_NOTE_X2,
+                DeviceInfo.Id.ONYX_NOVA,
+                DeviceInfo.Id.ONYX_NOVA2,
+                DeviceInfo.Id.ONYX_NOVA_AIR_2,
+                DeviceInfo.Id.ONYX_NOVA_AIR_C,
+                DeviceInfo.Id.ONYX_POKE4,
+                DeviceInfo.Id.ONYX_POKE4LITE,
+                DeviceInfo.Id.ONYX_TAB_ULTRA,
+                DeviceInfo.Id.STORYTEL_READER2,
+                -> {
+                    logController("Onyx/Sdk")
+                    OnyxSdkLightsController()
+                }
+                DeviceInfo.Id.CREMA_0710C,
+                DeviceInfo.Id.CREMA_CARTA_G,
+                DeviceInfo.Id.MEEBOOK_P6,
+                DeviceInfo.Id.NOOK_GLPLUS,
+                DeviceInfo.Id.RIDI_PAPER_3,
+                DeviceInfo.Id.TOLINO_EPOS1,
+                DeviceInfo.Id.TOLINO_SHINE3,
+                DeviceInfo.Id.TOLINO_VISION4,
+                DeviceInfo.Id.TOLINO_VISION5,
+                -> {
+                    logController("TolinoNTX")
+                    TolinoNtxController()
+                }
+                DeviceInfo.Id.CREMA_0660L,
+                DeviceInfo.Id.HISENSE_TOUCH_LITE,
+                DeviceInfo.Id.TOLINO_PAGE2,
+                -> {
+                    logController("TolinoNTXNoWarmth")
+                    TolinoNtxNoWarmthController()
+                }
+                DeviceInfo.Id.NOOK_GL4,
+                DeviceInfo.Id.TOLINO_EPOS2,
+                -> {
+                    logController("TolinoRoot")
+                    TolinoRootController()
+                }
+                DeviceInfo.Id.TOLINO_EPOS3,
+                DeviceInfo.Id.TOLINO_VISION6,
+                DeviceInfo.Id.TOLINO_SHINE4,
+                -> {
+                    logController("TolinoB300Controller")
+                    TolinoB300Controller()
+                }
+                DeviceInfo.Id.ONYX_PALMA2_PRO,
+                -> {
+                    logController("OnyxPalma2Pro")
+                    OnyxPalma2ProController()
+                }
+                else -> {
+                    logController("Generic")
+                    GenericController()
+                }
+            }
+        }
+
+    private fun logController(name: String?) {
+        Timber.tag(TAG).i(String.format(Locale.US,
+            "Using %s driver", name))
+    }
+}
