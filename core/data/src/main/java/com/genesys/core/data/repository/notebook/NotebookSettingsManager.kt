@@ -1,11 +1,10 @@
 package com.genesys.core.data.repository.notebook
 
+import com.genesys.core.common.extension.fromJsonType
 import com.genesys.core.domain.repository.notebook.NotebookKeyValueRepository
 import com.genesys.core.model.notebook.NotebookKeyValue
 import com.genesys.core.model.notebook.NotebookSettings
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,13 +25,8 @@ import javax.inject.Singleton
 @Singleton
 class NotebookSettingsManager @Inject constructor(
     private val kvRepository: NotebookKeyValueRepository
-) {
-    private val moshi: Moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-
-    private val adapter: JsonAdapter<NotebookSettings> =
-        moshi.adapter(NotebookSettings::class.java)
+ ) {
+    private val gson = Gson()
 
     private val _current = MutableStateFlow(NotebookSettings())
 
@@ -49,7 +43,7 @@ class NotebookSettingsManager @Inject constructor(
     suspend fun load() = withContext(Dispatchers.IO) {
         val kv = kvRepository.get(NotebookSettings.KV_KEY) ?: return@withContext
         try {
-            val settings = adapter.fromJson(kv.value) ?: return@withContext
+            val settings = gson.fromJsonType<NotebookSettings>(kv.value)
             _current.value = settings
         } catch (e: Exception) {
             Timber.e(e, "Failed to deserialise NotebookSettings")
@@ -61,7 +55,7 @@ class NotebookSettingsManager @Inject constructor(
         _current.value = settings
         withContext(Dispatchers.IO) {
             try {
-                val json = adapter.toJson(settings)
+                val json = gson.toJson(settings)
                 kvRepository.set(NotebookKeyValue(NotebookSettings.KV_KEY, json))
             } catch (e: Exception) {
                 Timber.e(e, "Failed to persist NotebookSettings")
@@ -74,7 +68,7 @@ class NotebookSettingsManager @Inject constructor(
         kvRepository.observe(NotebookSettings.KV_KEY).map { kv ->
             if (kv == null) return@map NotebookSettings()
             try {
-                adapter.fromJson(kv.value) ?: NotebookSettings()
+                gson.fromJsonType<NotebookSettings>(kv.value)
             } catch (e: Exception) {
                 Timber.e(e, "Failed to deserialise observed NotebookSettings")
                 NotebookSettings()

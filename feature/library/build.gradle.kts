@@ -37,6 +37,7 @@ dependencies {
     // Navigation
     implementation(project(":core:navigation"))
     implementation(deps.navigation3Runtime)
+    implementation(deps.navigation3Ui)
 
     // Hilt
     implementation(deps.hiltAndroid)

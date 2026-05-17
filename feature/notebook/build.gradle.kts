@@ -15,6 +15,7 @@ android {
 dependencies {
     implementation(project(":core:navigation"))
     implementation(deps.navigation3Runtime)
+    implementation(deps.navigation3Ui)
     implementation(deps.activityCompose)
     implementation(deps.androidxLifecycleRuntimeCompose)
     implementation("androidx.compose.material:material")

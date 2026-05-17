@@ -28,9 +28,8 @@ dependencies {
     ksp(deps.androidxRoomCompiler)
     implementation(deps.androidxRoomKtx)
 
-    // Moshi (for type converters)
-    implementation(deps.moshi)
-    implementation(deps.moshiKotlin)
+    // Gson (for type converters)
+    implementation(deps.gson)
 
     // Stroke payload compatibility with Notable's SB1 + LZ4 encoding
     implementation("at.yawk.lz4:lz4-java:1.10.3")

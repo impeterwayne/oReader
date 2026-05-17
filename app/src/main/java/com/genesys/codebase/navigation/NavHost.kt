@@ -12,14 +12,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavBackStack
+import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
 import com.genesys.core.designsystem.theme.GenesysTheme
 import com.genesys.core.navigation.AppNavigator
 import com.genesys.core.navigation.AppNavigatorImpl
+import com.genesys.core.navigation.Route
 import com.genesys.feature.library.navigation.LibraryGraph
-import com.genesys.feature.library.navigation.LibrarySettings
 import com.genesys.feature.notebook.navigation.NotebookGraph
-import com.genesys.feature.notebook.navigation.NotebookPages
 
 @Composable
 fun rememberAppState(
@@ -47,7 +47,7 @@ fun rememberAppState(
 
 class AppState(
     val currentDestinationState: MutableState<TopLevelDestination>,
-    val backStacks: Map<TopLevelDestination, NavBackStack>,
+    val backStacks: Map<TopLevelDestination, NavBackStack<NavKey>>,
     val navigators: Map<TopLevelDestination, AppNavigator>
 ) {
     var currentDestination: TopLevelDestination
@@ -56,8 +56,11 @@ class AppState(
             currentDestinationState.value = value
         }
 
-    val activeBackStack: NavBackStack
+    val activeBackStack: NavBackStack<NavKey>
         get() = backStacks.getValue(currentDestination)
+
+    val activeRootKey: NavKey
+        get() = currentDestination.route
 
     val activeNavigator: AppNavigator
         get() = navigators.getValue(currentDestination)
@@ -98,27 +101,24 @@ fun NavHost(
             .background(GenesysTheme.colors.surfaceDim)
     ) {
         Box(modifier = Modifier.weight(1f)) {
+            val backStack = appState.activeBackStack
+            val navigator = appState.activeNavigator
+            val fillModifier = Modifier.fillMaxSize()
+
             when (appState.currentDestination) {
                 TopLevelDestination.Reader -> {
                     LibraryGraph(
-                        currentRoute = appState.activeBackStack.lastOrNull(),
-                        onOpenSettings = {
-                            appState.activeNavigator.navigate(LibrarySettings)
-                        },
-                        onBack = appState::handleBack,
-                        modifier = Modifier.fillMaxSize()
+                        backStack = backStack,
+                        navigator = navigator,
+                        modifier = fillModifier
                     )
                 }
 
                 TopLevelDestination.Notebook -> {
                     NotebookGraph(
-                        currentRoute = appState.activeBackStack.lastOrNull(),
-                        onOpenNotebook = appState.activeNavigator::navigate,
-                        onOpenPageList = { bookId ->
-                            appState.activeNavigator.navigate(NotebookPages(bookId = bookId))
-                        },
-                        onBack = appState::handleBack,
-                        modifier = Modifier.fillMaxSize()
+                        backStack = backStack,
+                        navigator = navigator,
+                        modifier = fillModifier
                     )
                 }
             }

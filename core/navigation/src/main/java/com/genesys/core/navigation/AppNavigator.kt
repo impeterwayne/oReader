@@ -3,8 +3,6 @@ package com.genesys.core.navigation
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
 
-interface Route : NavKey
-
 interface AppNavigator {
     val canPop: Boolean
 
@@ -16,7 +14,7 @@ interface AppNavigator {
 }
 
 class AppNavigatorImpl(
-    private val backStack: NavBackStack
+    private val backStack: NavBackStack<NavKey>
 ) : AppNavigator {
     override val canPop: Boolean
         get() = backStack.size > 1

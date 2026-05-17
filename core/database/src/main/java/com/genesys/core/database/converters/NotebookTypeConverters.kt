@@ -3,21 +3,20 @@ package com.genesys.core.database.converters
 import androidx.room.TypeConverter
 import com.genesys.core.model.notebook.NotebookPen
 import com.genesys.core.model.notebook.NotebookStrokePoint
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.Types
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import java.util.Date
 
 class NotebookTypeConverters {
-    private val moshi = Moshi.Builder().build()
-    private val stringListAdapter = moshi.adapter<List<String>>(
-        Types.newParameterizedType(List::class.java, String::class.java)
-    )
+    private val gson = Gson()
 
     @TypeConverter
-    fun fromStringList(value: List<String>): String = stringListAdapter.toJson(value)
+    fun fromStringList(value: List<String>): String = gson.toJson(value)
 
     @TypeConverter
-    fun toStringList(value: String): List<String> = stringListAdapter.fromJson(value).orEmpty()
+    fun toStringList(value: String): List<String> = runCatching {
+        gson.fromJson<List<String>>(value, object : TypeToken<List<String>>() {}.type)
+    }.getOrDefault(emptyList())
 
     @TypeConverter
     fun fromTimestamp(value: Long?): Date? = value?.let(::Date)

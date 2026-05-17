@@ -1,6 +1,6 @@
 package com.genesys.feature.notebook.editor
 
-import com.genesys.feature.notebook.navigation.NotebookEditor
+import com.genesys.core.navigation.Route
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,7 @@ import com.genesys.feature.notebook.ui.SnackState
 
 @Composable
 fun NotebookEditorRoute(
-    route: NotebookEditor,
+    route: Route.NotebookEditor,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     goToPages: (String) -> Unit = {},

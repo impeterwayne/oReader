@@ -2,6 +2,7 @@ plugins {
     id("codebase.android.library")
     id("codebase.android.compose")
     alias(libs.plugins.kotlinSerialization)
+    alias(libs.plugins.kotlinParcelize)
 }
 
 android {

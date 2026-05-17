@@ -1,6 +1,6 @@
 package com.genesys.feature.notebook.pages
 
-import com.genesys.feature.notebook.navigation.NotebookPages
+import com.genesys.core.navigation.Route
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -64,7 +64,7 @@ class NotebookPagesViewModel @Inject constructor(
 
 @Composable
 fun NotebookPagesRoute(
-    route: NotebookPages,
+    route: Route.NotebookPages,
     onBack: () -> Unit,
     onOpenPage: (pageId: String, bookId: String) -> Unit,
     modifier: Modifier = Modifier,

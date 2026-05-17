@@ -2,12 +2,11 @@ package com.genesys.core.data.repository.reader
 
 import com.genesys.core.domain.repository.notebook.NotebookKeyValueRepository
 import com.genesys.core.domain.repository.reader.SettingsRepository
+import com.genesys.core.common.extension.fromJsonType
 import com.genesys.core.model.notebook.NotebookKeyValue
 import com.genesys.core.model.reader.ReaderScanFolder
 import com.genesys.core.model.reader.ReaderSettings
-import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,13 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class SettingsManager @Inject constructor(
     private val kvRepository: NotebookKeyValueRepository
-) : SettingsRepository {
-    private val moshi: Moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
-
-    private val adapter: JsonAdapter<ReaderSettings> =
-        moshi.adapter(ReaderSettings::class.java)
+ ) : SettingsRepository {
+    private val gson = Gson()
 
     private val _current = MutableStateFlow(ReaderSettings())
 
@@ -45,7 +39,7 @@ class SettingsManager @Inject constructor(
         _current.value = normalized
         withContext(Dispatchers.IO) {
             try {
-                kvRepository.set(NotebookKeyValue(ReaderSettings.KV_KEY, adapter.toJson(normalized)))
+                kvRepository.set(NotebookKeyValue(ReaderSettings.KV_KEY, gson.toJson(normalized)))
             } catch (error: Exception) {
                 Timber.e(error, "Failed to persist Settings")
             }
@@ -111,9 +105,9 @@ class SettingsManager @Inject constructor(
 
     private fun parseSettings(json: String): ReaderSettings {
         return try {
-            adapter.fromJson(json)?.let { settings ->
+            gson.fromJsonType<ReaderSettings>(json).let { settings ->
                 settings.copy(scanFolders = normalizeFolders(settings.scanFolders))
-            } ?: ReaderSettings()
+            }
         } catch (error: Exception) {
             Timber.e(error, "Failed to deserialise Settings")
             ReaderSettings()
