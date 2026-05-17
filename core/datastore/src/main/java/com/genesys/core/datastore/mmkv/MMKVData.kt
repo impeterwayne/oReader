@@ -1,4 +1,4 @@
-package com.genesys.core.data.mmkv
+package com.genesys.core.datastore.mmkv
 
 import android.content.Context
 import com.tencent.mmkv.MMKV
