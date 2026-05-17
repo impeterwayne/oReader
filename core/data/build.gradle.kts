@@ -35,4 +35,10 @@ dependencies {
 
     // Timber
     implementation(deps.timber)
+
+    testImplementation(deps.junit)
+    testImplementation(deps.retrofit)
+    testImplementation(deps.converterGson)
+    testImplementation(deps.loggingInterceptor)
+    testImplementation(deps.sandwichRetrofit)
 }

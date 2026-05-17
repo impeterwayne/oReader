@@ -1,5 +1,18 @@
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.kotlin.dsl.the
+import java.util.Properties
+
+val localProperties = Properties().apply {
+    rootProject.file("local.properties")
+        .takeIf { it.exists() }
+        ?.inputStream()
+        ?.use(::load)
+}
+
+val baseUrl = localProperties.getProperty("AI_BASE_URL")
+    ?: "http\\://127.0.0.1\\:20128/v1/"
+val apiKey = localProperties.getProperty("AI_SERVICE_API_KEY")
+    ?: "sk-e69a732c4bc1a76a-77h8et-7d631c07"
 
 plugins {
     id("codebase.android.library")
@@ -16,7 +29,8 @@ android {
     }
 
     defaultConfig {
-        buildConfigField("String", "BASE_URL", "\"https://ai-service.backendvn.com/\"")
+        buildConfigField("String", "BASE_URL", "\"$baseUrl\"")
+        buildConfigField("String", "API_KEY", "\"$apiKey\"")
     }
 }
 
