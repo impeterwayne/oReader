@@ -1,1 +1,0 @@
-cdecl_func(luaopen_libopenlipclua)

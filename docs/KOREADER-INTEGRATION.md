@@ -15,37 +15,30 @@ oReader (Compose App Shell)
 │   ├── bridge/             — Storage, intent, and reading state bridges
 │   ├── runtime/            — Runtime initialization, directories, asset extraction
 │   └── di/                 — Hilt dependency injection
-├── vendor/                 — Vendored upstream sources (Git submodules)
-│   ├── koreader/           — KOReader Lua application
-│   ├── koreader-base/      — Native rendering engines (MuPDF, CREngine, etc.)
+├── vendor/                 — Vendored upstream sources
 │   └── android-luajit-launcher/ — Android NativeActivity for LuaJIT
 └── LICENSES/               — Compliance documentation
 ```
 
-## Upstream Sync Workflow
+## Runtime Distribution
 
-See `vendor/SYNC-STRATEGY.md` for detailed instructions.
+oReader uses prebuilt KOReader runtime APKs from official GitHub releases.
+The `feature/koreader` module downloads and extracts assets and native libraries
+at build time.
 
-### Quick Reference
+The `vendor/android-luajit-launcher` directory contains the launcher Activity
+source code that bridges between the Compose app shell and the KOReader runtime.
 
-```bash
-# Update to a new KOReader release
-cd vendor/koreader && git fetch origin && git checkout v2024.11
-cd ../koreader-base && git fetch origin && git checkout <matching-commit>
-cd ../android-luajit-launcher && git fetch origin && git checkout <matching-commit>
-cd ../..
-git add vendor/
-git commit -m "vendor: update KOReader to v2024.11"
+### Updating KOReader Version
 
-# Apply local patches after update
-git apply vendor/patches/koreader/*.patch
-git apply vendor/patches/koreader-base/*.patch
-git apply vendor/patches/android-luajit-launcher/*.patch
+Edit `feature/koreader/build.gradle.kts`:
+
+```kotlin
+val koreaderReleaseTag = "v2026.03"  // Update this
+val koreaderArtifactSha256 = "..."   // Update checksum from GitHub release
 ```
 
-## Local Patch Points
-
-### Current Integration Points
+## Integration Points
 
 | Component         | File / Area                              | Purpose                          |
 |-------------------|------------------------------------------|----------------------------------|
@@ -56,27 +49,16 @@ git apply vendor/patches/android-luajit-launcher/*.patch
 | App navigation    | `app/.../navigation/AppShell.kt`         | Reader tab → KOReader routing    |
 | Intent handling   | `app/.../MainActivity.kt`               | ACTION_VIEW → KOReader handoff   |
 
-### Patch Guidelines
-
-1. **Prefer wrappers over edits** — Wrap upstream behavior in bridge code
-   rather than editing KOReader Lua/C sources directly.
-2. **Keep patches narrow** — When vendor edits are necessary, change as few
-   lines as possible and document the reason.
-3. **Track patches** — All vendor patches go in `vendor/patches/` with
-   numbered filenames and README documentation.
-4. **Test after sync** — After updating submodules, verify: build succeeds,
-   runtime boots, document opens, back-navigation works.
 
 ## Release Obligations
 
 ### Before Each Release
 
 1. ✅ Source repository tagged with exact build commit
-2. ✅ Vendored submodules pinned to correct upstream commits
-3. ✅ Local patches documented in `vendor/patches/README.md`
-4. ✅ `LICENSES/THIRD-PARTY-NOTICES.md` generated
-5. ✅ APK `assets/licenses/` populated
-6. ✅ AGPL-3.0 source availability ensured
+2. ✅ KOReader release version documented in build.gradle.kts
+3. ✅ `LICENSES/THIRD-PARTY-NOTICES.md` generated
+4. ✅ APK `assets/licenses/` populated
+5. ✅ AGPL-3.0 source availability ensured
 
 ### License Files
 
@@ -122,9 +104,6 @@ dependencies. It uses `codebase.android.koreader` + `codebase.android.hilt`.
 - Check the reader library refreshes after storage permission or incoming file events
 
 ### Native libraries not found
-- Check `feature/koreader/src/main/jniLibs/<abi>/` contains `.so` files
+- Check build output for extracted libraries
 - Verify ABI matches the device: `adb shell getprop ro.product.cpu.abi`
-
-### Upstream sync conflicts
-- Check `vendor/patches/README.md` for known patch points
-- Re-apply patches after checkout: `git apply vendor/patches/<component>/*.patch`
+- Confirm the downloaded APK matches the expected SHA-256 checksum

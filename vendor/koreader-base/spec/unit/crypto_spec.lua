@@ -1,5 +1,0 @@
-describe("crypto smoke test", function()
-    it("should load ffi/crypto", function()
-        require("ffi/crypto")
-    end)
-end)
