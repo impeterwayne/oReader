@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- translate -->
+    <string name="koreader_activity_label">KOReader</string>
+    <string name="koreader_error_document_missing">Document not found</string>
+
     <string name="no_crash_attached">No crash report attached</string>
     <string name="test_button_epd">test e-ink</string>
     <string name="test_button_lights">test lights</string>
