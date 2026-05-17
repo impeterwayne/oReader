@@ -157,14 +157,8 @@ android {
 
     sourceSets {
         getByName("main") {
-            java.srcDirs(
-                "src/main/java",
-                rootProject.file("vendor/android-luajit-launcher/app/src/main/java"),
-            )
-            res.srcDirs(
-                "src/main/res",
-                rootProject.file("vendor/android-luajit-launcher/app/src/main/res"),
-            )
+            java.srcDirs("src/main/java")
+            res.srcDirs("src/main/res")
             assets.srcDirs("src/main/assets")
             assets.srcDir(embeddedAssetsDir)
             jniLibs.srcDirs("src/main/jniLibs")

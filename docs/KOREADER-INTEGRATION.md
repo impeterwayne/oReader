@@ -14,9 +14,8 @@ oReader (Compose App Shell)
 │   ├── host/               — KoreaderActivity (lifecycle boundary)
 │   ├── bridge/             — Storage, intent, and reading state bridges
 │   ├── runtime/            — Runtime initialization, directories, asset extraction
+│   ├── launcher/           — KOReader launcher (MainActivity, device controllers)
 │   └── di/                 — Hilt dependency injection
-├── vendor/                 — Vendored upstream sources
-│   └── android-luajit-launcher/ — Android NativeActivity for LuaJIT
 └── LICENSES/               — Compliance documentation
 ```
 
@@ -26,8 +25,8 @@ oReader uses prebuilt KOReader runtime APKs from official GitHub releases.
 The `feature/koreader` module downloads and extracts assets and native libraries
 at build time.
 
-The `vendor/android-luajit-launcher` directory contains the launcher Activity
-source code that bridges between the Compose app shell and the KOReader runtime.
+The launcher Activity code (org.koreader.launcher.MainActivity) and device-specific
+controllers are included directly in the feature/koreader module.
 
 ### Updating KOReader Version
 
